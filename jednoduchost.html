@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>Dokonalá jednoduchost — Medúzy</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap');
+
+:root{
+  --bg:#001a2e; --navy:#004469; --deeper:#00325a;
+  --blue:#00A0E3; --orange:#EF7F1A; --white:#ffffff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:var(--bg); width:1920px; height:1080px; overflow:hidden;
+  font-family:'DM Sans',sans-serif; color:var(--white);
+}
+.page{width:1920px; height:1080px; position:relative;}
+
+/* ===== HORNÍ LIŠTA ===== */
+.topbar{
+  position:absolute; top:0; left:0; right:0; height:116px; z-index:30;
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+  padding:0 64px 0 178px; background:linear-gradient(to bottom,rgba(0,26,46,0.92),rgba(0,26,46,0));
+}
+.back-home{
+  position:absolute; left:0; top:0; bottom:0; width:114px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,50,90,0.4); border-right:1px solid rgba(255,255,255,0.1);
+  cursor:pointer; transition:background .2s; z-index:31;
+}
+.back-home:hover{background:var(--blue);}
+.back-home .back-arrow{font-size:34px; color:#fff; line-height:1;}
+.tb-left{display:flex; flex-direction:column; gap:2px;}
+.tb-eyebrow{font-size:12px; font-weight:700; letter-spacing:5px; text-transform:uppercase; color:var(--blue);}
+.tb-title{font-size:34px; font-weight:700; line-height:1;}
+.tb-tag{font-size:14px; font-weight:300; color:rgba(255,255,255,0.5); margin-top:3px;}
+
+/* záložky kapitol */
+.chapter-tabs{display:flex; gap:6px; align-self:center; background:rgba(0,25,46,0.55); border-radius:12px; padding:5px;}
+.chapter-tab{
+  font-family:inherit; font-size:13px; font-weight:600; letter-spacing:0.3px;
+  color:rgba(255,255,255,0.45); background:transparent; border:none;
+  border-radius:8px; padding:9px 16px; cursor:pointer; transition:all .2s; white-space:nowrap;
+}
+.chapter-tab:hover{color:rgba(255,255,255,0.75);}
+.chapter-tab.active{background:var(--blue); color:#fff;}
+.chapter-tab.done{color:rgba(0,160,227,0.7);}
+
+/* jazyk */
+.lang{justify-self:end; display:flex; gap:4px; background:rgba(0,25,46,0.6);
+  border-radius:11px; padding:5px;}
+.lang button{font-family:inherit; font-size:14px; font-weight:600; letter-spacing:.05em;
+  border:none; border-radius:7px; padding:9px 18px; cursor:pointer;
+  background:transparent; color:rgba(255,255,255,0.4);}
+.lang button.active{background:var(--blue); color:#fff;}
+
+/* ===== SCÉNA (kapitoly) ===== */
+.stage{position:absolute; top:116px; left:0; right:0; bottom:0; overflow:hidden;}
+.chapter{position:absolute; inset:0; opacity:0; visibility:hidden;
+  transition:opacity .4s ease; }
+.chapter.active{opacity:1; visibility:visible;}
+
+/* ===== NAVIGAČNÍ ŠIPKY ===== */
+.nav-arrow{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:40;
+  width:64px; height:64px; border-radius:50%;
+  background:rgba(0,50,90,0.55); backdrop-filter:blur(8px);
+  border:1px solid rgba(0,160,227,0.3);
+  display:flex; align-items:center; justify-content:center;
+  font-size:30px; color:#fff; cursor:pointer; transition:all .2s;
+}
+.nav-arrow:hover{background:var(--blue);}
+.nav-arrow.prev{left:28px;} .nav-arrow.next{right:28px;}
+.nav-arrow.disabled{opacity:0; pointer-events:none;}
+
+/* ===== SPOLEČNÉ PRVKY KAPITOL ===== */
+.chapter-inner{position:absolute; inset:0; display:flex; align-items:center;
+  padding:24px 120px; gap:64px;}
+.media-col{flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+.text-col{flex:1; display:flex; flex-direction:column; justify-content:center; max-width:660px;}
+.rt-tag{font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase;
+  color:var(--orange); margin-bottom:18px;}
+.point{padding-left:20px; border-left:2px solid rgba(0,160,227,0.35); margin-bottom:22px;}
+.point-label{font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  color:var(--blue); margin-bottom:5px;}
+.point-text{font-size:21px; font-weight:300; line-height:1.55; color:rgba(255,255,255,0.82);}
+.lead{font-size:23px; font-weight:300; line-height:1.6; color:rgba(255,255,255,0.8); margin-bottom:26px;}
+
+/* stat řádek (žahavé buňky) */
+.stat-row{display:flex; gap:44px; margin-top:8px;}
+.stat .v{font-size:42px; font-weight:700; color:var(--white); line-height:1;}
+.stat .v span{font-size:18px; font-weight:300; color:rgba(255,255,255,0.5);}
+.stat .l{font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,0.4); margin-top:8px;}
+
+/* zvýrazněný wow blok (nesmrtelnost) */
+.wow{margin-top:24px; padding:20px 24px; border-radius:14px;
+  background:rgba(239,127,26,0.1); border:1px solid rgba(239,127,26,0.3);}
+.wow .wt{font-size:14px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  color:var(--orange); margin-bottom:8px;}
+.wow .wd{font-size:19px; font-weight:300; line-height:1.55; color:rgba(255,255,255,0.85);}
+.wow .wd i{color:#ffd9b0; font-style:italic;}
+
+/* ===== KAPITOLA 1: TĚLO ===== */
+.anat-frame{width:1200px; height:900px; border:0; display:block; background:transparent;}
+.anat-scale{width:1080px; height:810px; overflow:hidden;}
+.anat-scale iframe{transform:scale(0.9); transform-origin:top left;}
+
+/* ===== KAPITOLA 2: POHYB (plná plocha) ===== */
+.anim-frame{position:absolute; inset:0; width:100%; height:100%; border:0; display:block;}
+
+/* ===== KAPITOLA 3: ŽAHAVÉ BUŇKY ===== */
+.knid-media{width:900px; display:flex; flex-direction:column; gap:16px;}
+.knid-video{width:900px; height:560px; border-radius:16px; overflow:hidden;
+  background:#00121f; position:relative; border:1px solid rgba(0,160,227,0.2);}
+.knid-video video{width:100%; height:100%; object-fit:cover;}
+.knid-ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:10px; color:rgba(255,255,255,0.25);
+  font-size:13px; letter-spacing:2px; text-transform:uppercase;}
+.knid-cap{font-size:13px; font-weight:300; color:rgba(255,255,255,0.4); letter-spacing:1px;}
+
+/* ===== KAPITOLA 4: ŽIVOTNÍ CYKLUS ===== */
+.cycle-media{width:1000px; display:flex; align-items:center; justify-content:center;}
+.cycle-media img{width:1000px; height:auto; display:block;}
+
+/* patička */
+.footer{position:absolute; bottom:20px; left:120px; font-size:12px; font-weight:300;
+  color:rgba(255,255,255,0.2); letter-spacing:1px; z-index:20;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HORNÍ LIŠTA -->
+  <div class="topbar">
+    <div class="back-home" onclick="location.href='index.html'" role="button" aria-label="Zpět na úvod / Back to home">
+      <span class="back-arrow">&#8592;</span>
+    </div>
+    <div class="tb-left">
+      <div class="tb-eyebrow" data-cs="Dokonalá jednoduchost" data-en="Perfect simplicity">Dokonalá jednoduchost</div>
+      <div class="tb-title" id="chTitle"></div>
+      <div class="tb-tag" id="chTag"></div>
+    </div>
+    <div class="chapter-tabs" id="chapterTabs"></div>
+    <div class="lang">
+      <button id="csBtn" class="active">CS</button>
+      <button id="enBtn">EN</button>
+    </div>
+  </div>
+
+  <!-- SCÉNA -->
+  <div class="stage">
+
+    <!-- ===== 1 · TĚLO ===== -->
+    <div class="chapter active" data-cs-title="Tělo" data-en-title="The body"
+         data-cs-tag="Vypadá primitivně — a přesto dokonale funkční"
+         data-en-tag="Looks primitive — yet perfectly functional">
+      <div class="chapter-inner">
+        <div class="media-col">
+          <div class="anat-scale">
+            <iframe class="anat-frame" src="anatomie-foto-embed.html" scrolling="no"></iframe>
+          </div>
+        </div>
+        <div class="text-col">
+          <div class="rt-tag" data-cs="Bez mozku · bez srdce · bez kostí" data-en="No brain · no heart · no bones"></div>
+          <div class="point">
+            <div class="point-label" data-cs="Dýchání" data-en="Respiration"></div>
+            <div class="point-text" data-cs="Žádné plíce ani žábry. Kyslík prostupuje přímo tenkou tkání difuzí — tělo je tak tenké, že žádný dýchací orgán nepotřebuje."
+              data-en="No lungs or gills. Oxygen passes straight through the thin tissue by diffusion — the body is so thin it needs no breathing organ at all."></div>
+          </div>
+          <div class="point">
+            <div class="point-label" data-cs="Trávení" data-en="Digestion"></div>
+            <div class="point-text" data-cs="Jediný otvor slouží zároveň jako ústa i řiť. Vede do gastrovaskulární dutiny, která trávení i rozvod živin zvládá naráz."
+              data-en="A single opening serves as both mouth and anus. It leads to a gastrovascular cavity that handles digestion and nutrient transport at once."></div>
+          </div>
+          <div class="point">
+            <div class="point-label" data-cs="Smysly" data-en="Senses"></div>
+            <div class="point-text" data-cs="Na okraji zvonu sedí rhopalia — smyslové orgány, které vnímají světlo a rovnováhu a udávají rytmus stahů."
+              data-en="Around the bell margin sit rhopalia — sensory organs that detect light and balance and set the rhythm of the contractions."></div>
+          </div>
+          <div class="point">
+            <div class="point-label" data-cs="Nervová soustava" data-en="Nervous system"></div>
+            <div class="point-text" data-cs="Žádný mozek. Místo něj rozprostřená nervová síť po celém těle — jednoduché, decentralizované a bleskově rychlé řízení."
+              data-en="No brain. Instead, a nerve net spread across the whole body — simple, decentralised and lightning-fast control."></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 2 · POHYB ===== -->
+    <div class="chapter" data-cs-title="Pohyb" data-en-title="Propulsion"
+         data-cs-tag="Nejúspornější plavec v živočišné říši"
+         data-en-tag="The most efficient swimmer in the animal kingdom">
+      <iframe id="animFrame" class="anim-frame" src="meduza-pohyb-kroky.html?embed=1"></iframe>
+    </div>
+
+    <!-- ===== 3 · ŽAHAVÉ BUŇKY ===== -->
+    <div class="chapter" data-cs-title="Žahavé buňky" data-en-title="Stinging cells"
+         data-cs-tag="Nejrychlejší mechanismus v celé přírodě"
+         data-en-tag="The fastest mechanism in all of nature">
+      <div class="chapter-inner">
+        <div class="media-col">
+          <div class="knid-media">
+            <div class="knid-video">
+              <video autoplay muted loop playsinline preload="none" poster="images/knidocyt-em.jpg">
+                <source src="videos/knidocyt.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="knid-cap" data-cs="Snímek z elektronového mikroskopu · výstřel nematocysty"
+              data-en="Electron-microscope footage · nematocyst discharge"></div>
+          </div>
+        </div>
+        <div class="text-col">
+          <div class="rt-tag" data-cs="Jednobuněčná harpuna" data-en="A single-celled harpoon"></div>
+          <div class="lead" data-cs="Každé chapadlo nese tisíce žahavých buněk — knidocytů. Uvnitř každé je stočená harpuna (nematocysta) pod obrovským tlakem, připravená vystřelit při jediném dotyku."
+            data-en="Every tentacle carries thousands of stinging cells — cnidocytes. Inside each one a coiled harpoon (nematocyst) sits under enormous pressure, ready to fire at a single touch."></div>
+          <div class="stat-row">
+            <div class="stat">
+              <div class="v">700 <span>ns</span></div>
+              <div class="l" data-cs="Doba výstřelu" data-en="Discharge time"></div>
+            </div>
+            <div class="stat">
+              <div class="v">5 000 000 <span>g</span></div>
+              <div class="l" data-cs="Zrychlení hrotu" data-en="Tip acceleration"></div>
+            </div>
+          </div>
+          <div class="point" style="margin-top:26px;">
+            <div class="point-label" data-cs="Lov i obrana" data-en="Hunting and defence"></div>
+            <div class="point-text" data-cs="Harpuna probodne kořist a vstříkne jed. Táž zbraň slouží k lovu planktonu i k obraně před predátory."
+              data-en="The harpoon pierces the prey and injects venom. The same weapon serves both to catch plankton and to fend off predators."></div>
+          </div>
+          <div class="point">
+            <div class="point-label" data-cs="Síla" data-en="Potency"></div>
+            <div class="point-text" data-cs="U čtyřhranek patří jed k nejúčinnějším v celé živočišné říši — a to vše řídí jediná buňka."
+              data-en="In box jellyfish the venom is among the most potent in the entire animal kingdom — all controlled by a single cell."></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 4 · ŽIVOTNÍ CYKLUS ===== -->
+    <div class="chapter" data-cs-title="Životní cyklus" data-en-title="Life cycle"
+         data-cs-tag="Jeden druh se dokáže vrátit v čase"
+         data-en-tag="One species can turn back time">
+      <div class="chapter-inner" style="padding:24px 100px;">
+        <div class="cycle-media">
+          <img id="cycleImg" src="zivotni-cyklus-v2.svg" data-cs="zivotni-cyklus-v2.svg" data-en="zivotni-cyklus-v2-en.svg" alt="Životní cyklus medúzy">
+        </div>
+        <div class="text-col">
+          <div class="rt-tag" data-cs="Střídání generací" data-en="Alternation of generations"></div>
+          <div class="lead" data-cs="Medúza nežije jen jako medúza. Z larvy (planula) vzniká přisedlý polyp, ten se procesem strobilace odškrcuje na drobné efyry, a z nich teprve dospívá medúza. Dvě zcela odlišné podoby jednoho druhu."
+            data-en="A jellyfish is not only a jellyfish. A larva (planula) becomes a sessile polyp, which by strobilation buds off tiny ephyrae, and only these mature into the adult medusa. Two utterly different forms of one species."></div>
+          <div class="wow">
+            <div class="wt" data-cs="Biologická nesmrtelnost" data-en="Biological immortality"></div>
+            <div class="wd" data-cs="Druh &lt;i&gt;Turritopsis dohrnii&lt;/i&gt; dokáže po poranění nebo rozmnožení celý cyklus zvrátit — z dospělé medúzy zpět do polypa. Teoreticky donekonečna. Jediný živočich na Zemi, který se umí vrátit v čase."
+              data-en="&lt;i&gt;Turritopsis dohrnii&lt;/i&gt; can reverse the whole cycle after injury or reproduction — from adult medusa back into a polyp. In theory, forever. The only animal on Earth that can turn back time."></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ŠIPKY -->
+  <div class="nav-arrow prev disabled" id="prevBtn">&#8592;</div>
+  <div class="nav-arrow next" id="nextBtn">&#8594;</div>
+
+  <div class="footer">ZOO Mořský svět · www.morskysvet.cz · © 2025 ZOO Mořský svět</div>
+
+</div>
+
+<script>
+/* ═══ STAV ═══ */
+let lang='cs', idx=0;
+const chapters=[...document.querySelectorAll('.chapter')];
+const N=chapters.length;
+
+/* ═══ JAZYK ═══ */
+function applyLang(){
+  document.querySelectorAll('[data-cs]:not(img)').forEach(el=>{
+    const v = lang==='en' ? (el.dataset.en||el.dataset.cs) : el.dataset.cs;
+    if(v!==undefined) el.innerHTML=v;   // innerHTML kvůli <i> v latinských názvech
+  });
+  // obrázek životního cyklu — přepnout na jazykovou verzi SVG
+  const cycleImg=document.getElementById('cycleImg');
+  if(cycleImg){ cycleImg.src = lang==='en' ? cycleImg.dataset.en : cycleImg.dataset.cs; }
+  updateTopbar();
+  refreshChapterTabs();
+  document.querySelectorAll('iframe').forEach(f=>{
+    try{ f.contentWindow.postMessage({type:'lang',lang},'*'); }catch(e){}
+  });
+}
+function setLang(l){
+  lang=l;
+  document.getElementById('csBtn').classList.toggle('active',l==='cs');
+  document.getElementById('enBtn').classList.toggle('active',l==='en');
+  applyLang();
+}
+document.getElementById('csBtn').onclick=()=>setLang('cs');
+document.getElementById('enBtn').onclick=()=>setLang('en');
+
+/* ═══ HORNÍ LIŠTA (titul + tagline kapitoly) ═══ */
+function updateTopbar(){
+  const c=chapters[idx];
+  document.getElementById('chTitle').textContent = lang==='en'?c.dataset.enTitle:c.dataset.csTitle;
+  document.getElementById('chTag').textContent   = lang==='en'?c.dataset.enTag:c.dataset.csTag;
+}
+
+/* ═══ NAVIGACE KAPITOL ═══ */
+function chTitleOf(c){ return lang==='en' ? c.dataset.enTitle : c.dataset.csTitle; }
+function refreshChapterTabs(){
+  document.querySelectorAll('#chapterTabs .chapter-tab').forEach((b,k)=>{
+    b.textContent = chTitleOf(chapters[k]);
+    b.className = 'chapter-tab'+(k===idx?' active':(k<idx?' done':''));
+  });
+}
+function show(i){
+  idx=Math.max(0,Math.min(N-1,i));
+  chapters.forEach((c,k)=>c.classList.toggle('active',k===idx));
+  refreshChapterTabs();
+  document.getElementById('prevBtn').classList.toggle('disabled',idx===0);
+  document.getElementById('nextBtn').classList.toggle('disabled',idx===N-1);
+  updateTopbar();
+  updateAnim();
+}
+function updateAnim(){
+  const f=document.getElementById('animFrame');
+  if(!f) return;
+  try{ f.contentWindow.postMessage({type:'active',active:(idx===1)},'*'); }catch(e){}
+}
+document.getElementById('prevBtn').onclick=()=>show(idx-1);
+document.getElementById('nextBtn').onclick=()=>show(idx+1);
+
+/* ═══ ZÁLOŽKY KAPITOL ═══ */
+(function(){
+  const wrap=document.getElementById('chapterTabs');
+  chapters.forEach((c,i)=>{
+    const b=document.createElement('button'); b.className='chapter-tab';
+    b.textContent=chTitleOf(c);
+    b.onclick=()=>show(i); wrap.appendChild(b);
+  });
+})();
+
+/* ═══ SWIPE (dotykové přepínání kapitol) ═══ */
+(function(){
+  let sx=0, sy=0, active=false;
+  const stage=document.querySelector('.stage');
+  stage.addEventListener('touchstart', e=>{
+    if(e.touches.length!==1) return;
+    sx=e.touches[0].clientX; sy=e.touches[0].clientY; active=true;
+  }, {passive:true});
+  stage.addEventListener('touchend', e=>{
+    if(!active) return; active=false;
+    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>70 && Math.abs(dx)>Math.abs(dy)*1.5){
+      if(dx<0) show(idx+1); else show(idx-1);
+    }
+  }, {passive:true});
+})();
+
+/* ═══ START ═══ */
+document.getElementById('animFrame').addEventListener('load',updateAnim);
+show(0); applyLang();
+
+/* ═══ AUTO-RESET (180 s nečinnosti) ═══ */
+(function(){
+  var T=180*1000, t;
+  function r(){ clearTimeout(t); t=setTimeout(function(){ location.href='index.html'; },T); }
+  ["mousemove","mousedown","touchstart","touchmove","keydown","click"].forEach(function(e){
+    document.addEventListener(e,r,{passive:true});
+  });
+  r();
+})();
+</script>
+</body>
+</html>

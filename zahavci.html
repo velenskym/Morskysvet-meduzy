@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>Žahavci — Medúzy světa a systematika</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap');
+
+:root{
+  --bg:#001a2e; --navy:#004469; --deeper:#00325a;
+  --blue:#00A0E3; --orange:#EF7F1A; --white:#ffffff;
+  --teal:#00d4aa; --orange2:#f0a050; --red:#E84855; --purple:#a080e0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  font-family:'DM Sans',sans-serif; background:var(--bg); color:#fff;
+  width:1920px; height:1080px; overflow:hidden; user-select:none;
+}
+.page{width:1920px; height:1080px; position:relative;}
+
+/* ===== HORNÍ LIŠTA (sdílená mezi kapitolami) ===== */
+.topbar{
+  position:absolute; top:0; left:0; right:0; height:116px; z-index:30;
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+  padding:0 64px 0 178px; background:linear-gradient(to bottom,rgba(0,26,46,0.92),rgba(0,26,46,0));
+}
+.back-home{
+  position:absolute; left:0; top:0; bottom:0; width:114px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,50,90,0.4); border-right:1px solid rgba(255,255,255,0.1);
+  cursor:pointer; transition:background .2s; z-index:31;
+}
+.back-home:hover{background:var(--blue);}
+.back-home .back-arrow{font-size:34px; color:#fff; line-height:1;}
+.tb-left{display:flex; flex-direction:column; gap:2px;}
+.tb-eyebrow{font-size:12px; font-weight:700; letter-spacing:5px; text-transform:uppercase; color:var(--blue);}
+.tb-title{font-size:34px; font-weight:700; line-height:1;}
+.tb-tag{font-size:14px; font-weight:300; color:rgba(255,255,255,0.5); margin-top:3px;}
+.chapter-tabs{display:flex; gap:6px; align-self:center; background:rgba(0,25,46,0.55); border-radius:12px; padding:5px;}
+.chapter-tab{
+  font-family:inherit; font-size:13.5px; font-weight:600; letter-spacing:0.3px;
+  color:rgba(255,255,255,0.45); background:transparent; border:none;
+  border-radius:8px; padding:9px 20px; cursor:pointer; transition:all .2s;
+}
+.chapter-tab:hover{color:rgba(255,255,255,0.75);}
+.chapter-tab.active{background:var(--blue); color:#fff;}
+.lang{justify-self:end; display:flex; gap:4px; background:rgba(0,25,46,0.6); border-radius:11px; padding:5px;}
+.lang button{font-family:inherit; font-size:14px; font-weight:600; letter-spacing:.05em;
+  border:none; border-radius:7px; padding:9px 18px; cursor:pointer;
+  background:transparent; color:rgba(255,255,255,0.4);}
+.lang button.active{background:var(--blue); color:#fff;}
+
+/* ===== SCÉNA / KAPITOLY ===== */
+.stage{position:absolute; top:116px; left:0; right:0; bottom:0; overflow:hidden;}
+.chapter{position:absolute; inset:0; opacity:0; visibility:hidden; pointer-events:none; transition:opacity .4s ease;}
+.chapter.active{opacity:1; visibility:visible; pointer-events:auto;}
+
+/* ===== ŠIPKY MEZI KAPITOLAMI (odlišné jméno od interních .nav-arrow) ===== */
+.chapter-arrow{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:40;
+  height:56px; border-radius:28px;
+  background:rgba(0,50,90,0.55); backdrop-filter:blur(8px);
+  border:1px solid rgba(0,160,227,0.3);
+  display:flex; align-items:center; gap:8px;
+  padding:0 18px; font-size:14px; font-weight:600; letter-spacing:0.3px;
+  color:#fff; cursor:pointer; transition:all .2s; white-space:nowrap;
+}
+.chapter-arrow:hover{background:var(--blue);}
+.chapter-arrow .arrow-icon{font-size:20px;}
+.chapter-arrow.prev{left:20px;} .chapter-arrow.next{right:20px;}
+.chapter-arrow.disabled{opacity:0; pointer-events:none;}
+
+/* ===== PATIČKA ===== */
+.footer{position:absolute; bottom:14px; left:64px; font-size:12px; font-weight:300;
+  color:rgba(255,255,255,0.2); letter-spacing:1px; z-index:20;}
+
+/* ================================================================
+   KAPITOLA 1 — MEDÚZY SVĚTA (z meduzy-sveta.html)
+   ================================================================ */
+.meduzy-page{
+  width:100%; height:100%;
+  display:flex; flex-direction:column;
+  padding: 26px 80px 36px;
+}
+.scroll-outer{ flex:1; min-height:0; position:relative; }
+.scroll-track{ display:flex; gap:24px; height:100%;
+  transition:transform 0.5s cubic-bezier(0.4,0,0.2,1); will-change:transform; }
+
+.card{ flex-shrink:0; width:560px; height:100%; border-radius:16px; overflow:hidden;
+  position:relative; cursor:pointer; background:#002235; border:1px solid rgba(255,255,255,0.08);
+  transition:border-color 0.2s, transform 0.2s; }
+.card:hover{ border-color:rgba(0,160,227,0.4); transform:translateY(-3px); }
+.card-photo{ width:100%; height:58%; object-fit:cover; display:block; background:#001525; }
+.card-photo-placeholder{ width:100%; height:58%; background:linear-gradient(135deg,#001525 0%,#002540 100%);
+  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; flex-shrink:0; }
+.card-photo-placeholder .ph-icon{ font-size:40px; opacity:0.15; }
+.card-photo-placeholder .ph-text{ font-size:12px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.2); }
+.card-photo-gradient{ position:absolute; left:0; right:0; top:38%; height:25%;
+  background:linear-gradient(to bottom,transparent,#002235); pointer-events:none; }
+.card-body{ padding:20px 28px 24px; position:relative; }
+.card-name{ font-size:26px; font-weight:700; line-height:1.1; margin-bottom:4px; }
+.card-latin{ font-size:14px; font-weight:300; font-style:italic; color:var(--blue); margin-bottom:14px; }
+.card-text{ font-size:15px; font-weight:300; color:rgba(255,255,255,0.72); line-height:1.6; }
+.card-expand{ position:absolute; top:16px; right:16px; width:36px; height:36px; border-radius:50%;
+  background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2);
+  display:flex; align-items:center; justify-content:center; font-size:14px; opacity:0;
+  transition:opacity 0.2s; color:rgba(255,255,255,0.8); }
+.card:hover .card-expand{ opacity:1; }
+
+.nav-dots{ position:absolute; bottom:-32px; left:50%; transform:translateX(-50%); display:flex; gap:8px; }
+.nav-dot{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.2); cursor:pointer;
+  transition:background 0.3s, transform 0.3s; }
+.nav-dot.active{ background:var(--blue); transform:scale(1.3); }
+
+.nav-arrow{ position:absolute; top:50%; transform:translateY(-50%); width:52px; height:52px; border-radius:50%;
+  background:rgba(0,26,46,0.85); border:1.5px solid rgba(255,255,255,0.15);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px;
+  color:rgba(255,255,255,0.7); transition:background 0.2s, border-color 0.2s, opacity 0.2s; z-index:10; }
+.nav-arrow:hover{ background:rgba(0,100,180,0.6); border-color:var(--blue); color:#fff; }
+.nav-arrow.hidden{ opacity:0; pointer-events:none; }
+.nav-arrow.prev{ left:16px; } .nav-arrow.next{ right:16px; }
+
+.fullscreen{ position:fixed; inset:0; z-index:100; display:flex; opacity:0; pointer-events:none;
+  transition:opacity 0.35s ease; }
+.fullscreen.active{ opacity:1; pointer-events:all; }
+.fs-photo-side{ flex:1.2; position:relative; overflow:hidden; }
+.fs-photo{ width:100%; height:100%; object-fit:cover; display:block; background:#001018; }
+.fs-photo-placeholder{ width:100%; height:100%; background:linear-gradient(135deg,#001018 0%,#002030 100%);
+  display:flex; align-items:center; justify-content:center; }
+.fs-photo-placeholder .ph-icon{ font-size:80px; opacity:0.1; }
+.fs-gradient{ position:absolute; top:0; right:0; width:200px; height:100%;
+  background:linear-gradient(to right,transparent,#001a2e); pointer-events:none; }
+.fs-text-side{ width:680px; flex-shrink:0; background:var(--bg); padding:80px 64px;
+  display:flex; flex-direction:column; justify-content:center; gap:0; }
+.fs-eyebrow{ font-size:11px; font-weight:700; letter-spacing:5px; color:var(--blue);
+  text-transform:uppercase; margin-bottom:16px; }
+.fs-name{ font-size:58px; font-weight:700; line-height:1; margin-bottom:8px; }
+.fs-latin{ font-size:20px; font-weight:300; font-style:italic; color:rgba(255,255,255,0.55); margin-bottom:28px; }
+.fs-text{ font-size:18px; font-weight:300; line-height:1.7; color:rgba(255,255,255,0.82); }
+.fs-close{ position:absolute; top:32px; right:32px; width:44px; height:44px; border-radius:50%;
+  background:rgba(255,255,255,0.08); border:1.5px solid rgba(255,255,255,0.15);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px;
+  color:rgba(255,255,255,0.7); transition:background 0.2s; z-index:10; }
+.fs-close:hover{ background:rgba(255,255,255,0.15); color:#fff; }
+.fs-counter{ position:absolute; bottom:40px; left:64px; font-size:13px; font-weight:600;
+  letter-spacing:3px; color:rgba(255,255,255,0.3); }
+.fs-nav{ position:absolute; bottom:40px; right:64px; display:flex; gap:12px; }
+.fs-nav-btn{ width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.06);
+  border:1.5px solid rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:16px; color:rgba(255,255,255,0.6); transition:background 0.2s, color 0.2s; }
+.fs-nav-btn:hover{ background:rgba(0,160,227,0.2); color:#fff; }
+.fs-nav-btn.disabled{ opacity:0.2; pointer-events:none; }
+
+/* ================================================================
+   KAPITOLA 2 — ŽAHAVCI / SYSTEMATIKA (z zahavci-strom-html.html)
+   ================================================================ */
+.tree-page{
+  width:100%; height:100%; position:relative;
+  background:radial-gradient(ellipse at 30% 20%, var(--deeper) 0%, transparent 60%);
+  display:flex; flex-direction:column;
+  padding:22px 48px 20px;
+}
+.tree{ flex:1; display:flex; flex-direction:column; align-items:center; gap:0; min-height:0; position:relative; }
+
+.root-node{ background:#001a2e; border:2px solid rgba(255,255,255,0.5); border-radius:40px;
+  padding:10px 40px; text-align:center; box-shadow:0 0 20px rgba(255,255,255,0.08); flex-shrink:0; }
+.root-node .name{ font-size:17px; font-weight:700; }
+.root-node .latin{ font-size:11px; font-weight:300; color:rgba(255,255,255,0.5); font-style:italic; }
+
+.root-connector{ display:flex; align-items:flex-start; justify-content:center; width:100%;
+  flex-shrink:0; position:relative; height:32px; }
+
+.branches{ display:flex; width:100%; gap:16px; flex:1; min-height:0; }
+
+.branch-anthozoa{ width:22%; flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:0; }
+.branch-medusozoa{ flex:1; display:flex; flex-direction:column; align-items:center; gap:0; }
+.branch-connector{ width:2px; height:18px; flex-shrink:0; background:transparent; }
+
+.sub-root{ border-radius:30px; padding:8px 24px; text-align:center; flex-shrink:0; cursor:default; }
+.sub-root .name{ font-size:15px; font-weight:700; }
+.sub-root .latin{ font-size:11px; font-weight:300; font-style:italic; opacity:0.7; margin-top:1px; }
+.sub-root.anthozoa-node{ background:#1a0d00; border:2px solid #EF7F1A; color:#EF7F1A; }
+.sub-root.medusozoa-node{ background:#00101a; border:2px solid #00A0E3; color:#00A0E3; }
+
+.anthozoa-split{ display:flex; width:100%; justify-content:space-around; position:relative; height:26px; flex-shrink:0; }
+.medusozoa-split{ display:flex; width:100%; position:relative; height:26px; flex-shrink:0; }
+
+.anthozoa-groups{ display:flex; width:100%; gap:10px; flex:1; min-height:0; align-items:flex-start; }
+.medusozoa-groups{ display:flex; width:100%; gap:10px; flex:1; min-height:0; align-items:flex-start; }
+
+.group-card{ display:flex; flex-direction:column; border-radius:12px; overflow:hidden; cursor:pointer;
+  transition:transform 0.2s ease, box-shadow 0.2s ease; flex:1; min-width:0; position:relative; z-index:1; }
+.group-card:hover{ transform:translateY(-2px); }
+.group-card.large{ flex:1.4; } .group-card.medium{ flex:1; } .group-card.small{ flex:0.8; }
+
+.card-header{ padding:18px 22px 16px; flex-shrink:0; position:relative; }
+.card-header .star{ position:absolute; top:12px; left:12px; width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+.card-header .group-name{ font-size:23px; font-weight:700; line-height:1.15; }
+.card-header .group-latin{ font-size:13.5px; font-weight:300; font-style:italic; opacity:0.65; margin-top:4px; }
+.card-header .group-count{ font-size:12px; font-weight:300; opacity:0.5; margin-top:3px; }
+
+.card-hint{ padding:9px 22px 13px; font-size:11.5px; font-weight:600; letter-spacing:1px;
+  text-transform:uppercase; display:flex; align-items:center; justify-content:space-between;
+  opacity:0.6; border-top:1px solid rgba(255,255,255,0.08); flex-shrink:0; }
+.card-hint .arrow{ font-size:14px; transition:transform 0.2s; }
+.group-card:hover .card-hint{ opacity:0.95; }
+.group-card:hover .card-hint .arrow{ transform:translateX(3px); }
+
+.sheet{ position:absolute; left:50%; bottom:0; width:1500px; max-width:calc(100% - 96px);
+  transform:translate(-50%,100%); transition:transform 0.4s cubic-bezier(0.4,0,0.2,1); z-index:10; pointer-events:none; }
+.sheet.open{ transform:translate(-50%,0); pointer-events:auto; }
+.sheet-inner{ display:flex; background:#001624; border:1px solid color-mix(in srgb, var(--sc,#00A0E3) 45%, transparent);
+  border-bottom:none; border-radius:20px 20px 0 0; box-shadow:0 -12px 40px rgba(0,0,0,0.45); overflow:hidden; height:388px; }
+.sheet-photo{ width:310px; flex-shrink:0; background:color-mix(in srgb, var(--sc,#00A0E3) 12%, #001018);
+  display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; position:relative; overflow:hidden; }
+.sheet-photo img{ width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+.sheet-photo img.cutout{ object-fit:contain; inset:22px; width:calc(100% - 44px); height:calc(100% - 44px);
+  filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5)); }
+.sheet-photo-credit{ position:absolute; left:0; right:0; bottom:0; padding:5px 10px; font-size:11px;
+  font-weight:300; color:rgba(255,255,255,0.85); background:linear-gradient(transparent, rgba(0,0,0,0.65)); text-align:right; }
+.sheet-photo-placeholder{ font-size:13px; font-weight:300; color:color-mix(in srgb, var(--sc,#00A0E3) 70%, white);
+  opacity:0.7; line-height:1.5; }
+.sheet-body{ flex:1; padding:24px 40px 24px 34px; position:relative; display:flex; flex-direction:column; min-width:0; }
+.sheet-close{ position:absolute; top:18px; right:24px; width:34px; height:34px; border-radius:50%;
+  background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; font-size:16px;
+  cursor:pointer; color:rgba(255,255,255,0.6); }
+.sheet-close:hover{ background:rgba(255,255,255,0.12); color:#fff; }
+.sheet-name{ font-size:29px; font-weight:700; color:var(--sc,#00A0E3); padding-right:50px; }
+.sheet-latin{ font-size:15.5px; font-style:italic; opacity:0.65; margin-top:4px; }
+.sheet-count{ font-size:12.5px; opacity:0.45; margin-top:3px; letter-spacing:0.5px; }
+.sheet-species{ list-style:none; margin-top:16px; display:flex; flex-wrap:wrap; gap:8px 10px; }
+.sheet-species li{ font-size:14.5px; font-weight:300; color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:6px 14px; cursor:pointer; transition:all 0.15s; user-select:none; }
+.sheet-species li:hover{ background:rgba(255,255,255,0.09); border-color:rgba(255,255,255,0.22); }
+.sheet-species li.active{ background:color-mix(in srgb, var(--sc,#00A0E3) 22%, transparent); border-color:var(--sc,#00A0E3); color:#fff; }
+.sheet-species li strong{ font-weight:600; color:#fff; }
+.sheet-fact{ margin-top:auto; padding:13px 18px; border-radius:10px; font-size:14.5px; font-weight:300;
+  font-style:italic; line-height:1.55; color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.04);
+  border-left:3px solid var(--sc,#00A0E3); }
+
+.hex{ --c:#EF7F1A; } .oct{ --c:#f0a050; } .scy{ --c:#00d4aa; }
+.hyd{ --c:#00A0E3; } .cub{ --c:#E84855; } .sta{ --c:#a080e0; }
+.group-card{ border:1.5px solid color-mix(in srgb, var(--c) 50%, transparent); }
+.group-card:hover{ box-shadow:0 4px 20px color-mix(in srgb, var(--c) 20%, transparent); }
+.card-header{ background:color-mix(in srgb, var(--c) 10%, #001018); }
+.card-header .group-name{ color:var(--c); }
+.card-header .star{ background:var(--c); color:#001018; }
+.group-card.active, .group-card.active:hover{
+  box-shadow:0 0 0 2px var(--c), 0 8px 26px color-mix(in srgb, var(--c) 45%, transparent);
+  transform:translateY(-2px);
+}
+
+.footnotes{ display:flex; gap:12px; margin-top:10px; flex-shrink:0; align-items:center; }
+.footnote-item{ display:flex; align-items:center; gap:8px; font-size:11px; font-weight:300; color:rgba(255,255,255,0.35); }
+.footnote-star{ width:16px; height:16px; border-radius:50%; background:var(--teal);
+  display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:700; color:#001018; flex-shrink:0; }
+.footnote-sep{ width:1px; height:16px; background:rgba(255,255,255,0.15); }
+.note-right{ margin-left:auto; font-style:italic; }
+
+#treeLines{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+.root-node, .sub-root{ position:relative; z-index:1; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HORNÍ LIŠTA -->
+  <div class="topbar">
+    <div class="back-home" onclick="location.href='index.html'" role="button" aria-label="Zpět na úvod">
+      <span class="back-arrow">&#8592;</span>
+    </div>
+    <div class="tb-left">
+      <div class="tb-eyebrow" data-cs="Systematika" data-en="Systematics">Systematika</div>
+      <div class="tb-title" id="chTitle"></div>
+      <div class="tb-tag" id="chTag"></div>
+    </div>
+    <div class="chapter-tabs" id="chapterTabs"></div>
+    <div class="lang">
+      <button id="csBtn" class="active">CS</button>
+      <button id="enBtn">EN</button>
+    </div>
+  </div>
+
+  <!-- SCÉNA -->
+  <div class="stage">
+
+    <!-- ===== KAPITOLA 1 · MEDÚZY SVĚTA ===== -->
+    <div class="chapter active" data-title="Medúzy světa" data-tag="Pět druhů, pět příběhů" data-title-en="Jellyfish of the World" data-tag-en="Five species, five stories">
+      <div class="meduzy-page">
+        <div class="scroll-outer" id="scrollOuter">
+          <div class="scroll-track" id="scrollTrack">
+
+            <div class="card" onclick="openFullscreen(0)">
+              <div class="card-photo-placeholder">
+                <div class="ph-icon">🪼</div>
+                <div class="ph-text" data-cs="Foto bude doplněno" data-en="Photo coming soon">Foto bude doplněno</div>
+              </div>
+              <div class="card-photo-gradient"></div>
+              <div class="card-expand">⤢</div>
+              <div class="card-body">
+                <div class="card-name" data-cs="Talířovka ušatá" data-en="Moon jelly">Talířovka ušatá</div>
+                <div class="card-latin">Aurelia aurita</div>
+                <div class="card-text" data-cs="Nejrozšířenější medúza světa. Žije ve všech oceánech a díky nenáročnosti se stala modelovým organismem vědy — většina toho, co víme o medúzách, pochází z výzkumu právě tohoto druhu." data-en="The most widespread jellyfish in the world. It lives in every ocean, and thanks to being so easy to keep, it has become science&#8217;s model organism — most of what we know about jellyfish comes from research on this very species.">Nejrozšířenější medúza světa. Žije ve všech oceánech a díky nenáročnosti se stala modelovým organismem vědy — většina toho, co víme o medúzách, pochází z výzkumu právě tohoto druhu.</div>
+              </div>
+            </div>
+
+            <div class="card" onclick="openFullscreen(1)">
+              <div class="card-photo-placeholder">
+                <div class="ph-icon">🪼</div>
+                <div class="ph-text" data-cs="Foto bude doplněno" data-en="Photo coming soon">Foto bude doplněno</div>
+              </div>
+              <div class="card-photo-gradient"></div>
+              <div class="card-expand">⤢</div>
+              <div class="card-body">
+                <div class="card-name" data-cs="Čtyřhranka smrtelná" data-en="Australian box jellyfish">Čtyřhranka smrtelná</div>
+                <div class="card-latin">Chironex fleckeri</div>
+                <div class="card-text" data-cs="Nejjedovatější mořský živočich světa. Jediný jedinec nese dost jedu k usmrcení 60 lidí. V sezóně jsou australské pláže z tohoto důvodu uzavřeny." data-en="The most venomous marine animal on Earth. A single individual carries enough venom to kill 60 people. Australian beaches close during its season for this very reason.">Nejjedovatější mořský živočich světa. Jediný jedinec nese dost jedu k usmrcení 60 lidí. V sezóně jsou australské pláže z tohoto důvodu uzavřeny.</div>
+              </div>
+            </div>
+
+            <div class="card" onclick="openFullscreen(2)">
+              <div class="card-photo-placeholder">
+                <div class="ph-icon">🪼</div>
+                <div class="ph-text" data-cs="Foto bude doplněno" data-en="Photo coming soon">Foto bude doplněno</div>
+              </div>
+              <div class="card-photo-gradient"></div>
+              <div class="card-expand">⤢</div>
+              <div class="card-body">
+                <div class="card-name" data-cs="Nesmrtelná medúza" data-en="Immortal jellyfish">Nesmrtelná medúza</div>
+                <div class="card-latin">Turritopsis dohrnii</div>
+                <div class="card-text" data-cs="Jediný živočich, který se dokáže vrátit v čase. Po rozmnožení nebo poranění se transformuje zpět do stádia polypa. Biologicky nesmrtelná — tento cyklus může opakovat donekonečna." data-en="The only animal that can turn back time. After reproducing or being injured, it transforms back into a polyp. Biologically immortal — it can repeat this cycle indefinitely.">Jediný živočich, který se dokáže vrátit v čase. Po rozmnožení nebo poranění se transformuje zpět do stádia polypa. Biologicky nesmrtelná — tento cyklus může opakovat donekonečna.</div>
+              </div>
+            </div>
+
+            <div class="card" onclick="openFullscreen(3)">
+              <div class="card-photo-placeholder">
+                <div class="ph-icon">🪼</div>
+                <div class="ph-text" data-cs="Foto bude doplněno" data-en="Photo coming soon">Foto bude doplněno</div>
+              </div>
+              <div class="card-photo-gradient"></div>
+              <div class="card-expand">⤢</div>
+              <div class="card-body">
+                <div class="card-name" data-cs="Medúzka sladkovodní" data-en="Freshwater jellyfish">Medúzka sladkovodní</div>
+                <div class="card-latin">Craspedacusta sowerbyi</div>
+                <div class="card-text" data-cs="Jediná sladkovodní medúza světa — a žije i u nás. Pochází z Číny, do Evropy se dostala s akvarijními rostlinami. Dorůstá jen 2,5 cm a většinu času tráví jako polyp na dně řek a rybníků." data-en="The world&#8217;s only freshwater jellyfish — and it lives here too. Native to China, it reached Europe with imported aquarium plants. It grows to just 2.5 cm and spends most of its time as a polyp on the bottom of rivers and ponds.">Jediná sladkovodní medúza světa — a žije i u nás. Pochází z Číny, do Evropy se dostala s akvarijními rostlinami. Dorůstá jen 2,5 cm a většinu času tráví jako polyp na dně řek a rybníků.</div>
+              </div>
+            </div>
+
+            <div class="card" onclick="openFullscreen(4)">
+              <div class="card-photo-placeholder">
+                <div class="ph-icon">🪼</div>
+                <div class="ph-text" data-cs="Foto bude doplněno" data-en="Photo coming soon">Foto bude doplněno</div>
+              </div>
+              <div class="card-photo-gradient"></div>
+              <div class="card-expand">⤢</div>
+              <div class="card-body">
+                <div class="card-name" data-cs="Talířovka středomořská" data-en="Mediterranean jellyfish">Talířovka středomořská</div>
+                <div class="card-latin">Cotylorhiza tuberculata</div>
+                <div class="card-text" data-cs="Přezdívá se jí "smažené vejce". Ve svých tkáních hostí fotosyntetické řasy, které jí dodávají energii — stejný princip jako u korálů. Žahnutí je pro člověka prakticky nebolestivé." data-en="Nicknamed the "fried egg jellyfish." It hosts photosynthetic algae in its tissue that supply it with energy — the same principle corals use. Its sting is practically painless to humans.">Přezdívá se jí "smažené vejce". Ve svých tkáních hostí fotosyntetické řasy, které jí dodávají energii — stejný princip jako u korálů. Žahnutí je pro člověka prakticky nebolestivé.</div>
+              </div>
+            </div>
+
+          </div><!-- /.scroll-track -->
+
+          <div class="nav-arrow prev hidden" id="prevBtn" onclick="scrollCards(-1)">&#8592;</div>
+          <div class="nav-arrow next" id="nextBtn" onclick="scrollCards(1)">&#8594;</div>
+          <div class="nav-dots" id="navDots"></div>
+
+        </div><!-- /.scroll-outer -->
+      </div><!-- /.meduzy-page -->
+    </div><!-- /.chapter (medúzy) -->
+
+    <!-- ===== KAPITOLA 2 · ŽAHAVCI (SYSTEMATIKA) ===== -->
+    <div class="chapter" data-title="Žahavci" data-tag="Cnidaria · ~12 300 druhů" data-title-en="Cnidarians" data-tag-en="Cnidaria · ~12,300 species">
+      <div class="tree-page">
+
+        <div class="tree" id="tree">
+          <svg id="treeLines"></svg>
+
+          <div class="root-node" id="nodeRoot">
+            <div class="name" data-cs="ŽAHAVCI" data-en="CNIDARIANS">ŽAHAVCI</div>
+            <div class="latin">Cnidaria</div>
+          </div>
+
+          <div class="root-connector"></div>
+
+          <div class="branches">
+
+            <div class="branch-anthozoa">
+              <div class="branch-connector"></div>
+              <div class="sub-root anthozoa-node" id="nodeAnth">
+                <div class="name" data-cs="Korálnatci" data-en="Anthozoans">Korálnatci</div>
+                <div class="latin" data-cs="Anthozoa · ~7 200 druhů" data-en="Anthozoa · ~7,200 species">Anthozoa · ~7 200 druhů</div>
+              </div>
+              <div class="anthozoa-split"></div>
+              <div class="anthozoa-groups">
+
+                <div class="group-card hex" data-key="hex" onclick="openSheet('hex', this)">
+                  <div class="card-header">
+                    <div class="group-name" data-cs="Šestičetní" data-en="Hexacorals">Šestičetní</div>
+                    <div class="group-latin">Hexacorallia</div>
+                    <div class="group-count" data-cs="~4 300 druhů" data-en="~4,300 species">~4 300 druhů</div>
+                  </div>
+                  <div class="card-hint"><span data-cs="Zástupci a zajímavost" data-en="Species and facts">Zástupci a zajímavost</span><span class="arrow">→</span></div>
+                </div>
+
+                <div class="group-card oct" data-key="oct" onclick="openSheet('oct', this)">
+                  <div class="card-header">
+                    <div class="group-name" data-cs="Osmičetní" data-en="Octocorals">Osmičetní</div>
+                    <div class="group-latin">Octocorallia</div>
+                    <div class="group-count" data-cs="~3 000 druhů" data-en="~3,000 species">~3 000 druhů</div>
+                  </div>
+                  <div class="card-hint"><span data-cs="Zástupci a zajímavost" data-en="Species and facts">Zástupci a zajímavost</span><span class="arrow">→</span></div>
+                </div>
+
+              </div>
+              <div style="margin-top:8px; padding:6px 10px; border-radius:6px; background:rgba(239,127,26,0.07); border:1px solid rgba(239,127,26,0.2); font-size:11px; color:rgba(255,255,255,0.55); text-align:center; line-height:1.4;">
+                <span data-cs="Žijí pouze jako polypi —<br>stádium medúzy nevytváří" data-en="They live only as polyps —<br>they never form a medusa stage">Žijí pouze jako polypi —<br>stádium medúzy nevytváří</span>
+              </div>
+            </div>
+
+            <div class="branch-medusozoa">
+              <div class="branch-connector"></div>
+              <div class="sub-root medusozoa-node" id="nodeMed">
+                <div class="name">Medusozoa</div>
+                <div class="latin" data-cs="~3 900 druhů" data-en="~3,900 species">~3 900 druhů</div>
+              </div>
+              <div style="height:20px; flex-shrink:0;"></div>
+              <div class="medusozoa-groups">
+
+                <div class="group-card scy large" data-key="scy" onclick="openSheet('scy', this)">
+                  <div class="card-header" style="padding-left:44px;">
+                    <div class="star">★</div>
+                    <div class="group-name" data-cs="Medúzovci" data-en="True jellyfish">Medúzovci</div>
+                    <div class="group-latin">Scyphozoa</div>
+                    <div class="group-count" data-cs="~200 druhů" data-en="~200 species">~200 druhů</div>
+                  </div>
+                  <div class="card-hint"><span data-cs="Zástupci a zajímavost" data-en="Species and facts">Zástupci a zajímavost</span><span class="arrow">→</span></div>
+                </div>
+
+                <div class="group-card hyd large" data-key="hyd" onclick="openSheet('hyd', this)">
+                  <div class="card-header">
+                    <div class="group-name" data-cs="Polypovci" data-en="Hydrozoans">Polypovci</div>
+                    <div class="group-latin">Hydrozoa</div>
+                    <div class="group-count" data-cs="~3 700 druhů" data-en="~3,700 species">~3 700 druhů</div>
+                  </div>
+                  <div class="card-hint"><span data-cs="Zástupci a zajímavost" data-en="Species and facts">Zástupci a zajímavost</span><span class="arrow">→</span></div>
+                </div>
+
+                <div class="group-card cub small" data-key="cub" onclick="openSheet('cub', this)">
+                  <div class="card-header">
+                    <div class="group-name" data-cs="Čtyřhranky" data-en="Box jellyfish">Čtyřhranky</div>
+                    <div class="group-latin">Cubozoa</div>
+                    <div class="group-count" data-cs="~50 druhů" data-en="~50 species">~50 druhů</div>
+                  </div>
+                  <div class="card-hint"><span data-cs="Zástupci a zajímavost" data-en="Species and facts">Zástupci a zajímavost</span><span class="arrow">→</span></div>
+                </div>
+
+                <div class="group-card sta small" data-key="sta" onclick="openSheet('sta', this)">
+                  <div class="card-header">
+                    <div class="group-name" data-cs="Kalichovky" data-en="Stalked jellyfish">Kalichovky</div>
+                    <div class="group-latin">Staurozoa</div>
+                    <div class="group-count" data-cs="~50 druhů" data-en="~50 species">~50 druhů</div>
+                  </div>
+                  <div class="card-hint"><span data-cs="Zástupci a zajímavost" data-en="Species and facts">Zástupci a zajímavost</span><span class="arrow">→</span></div>
+                </div>
+
+              </div>
+              <div style="margin-top:8px; padding:6px 10px; border-radius:6px; background:rgba(0,160,227,0.07); border:1px solid rgba(0,160,227,0.2); font-size:11px; color:rgba(255,255,255,0.55); text-align:center;">
+                <span data-cs="Mají ve svém životním cyklu stádium medúzy" data-en="Their life cycle includes a medusa stage">Mají ve svém životním cyklu stádium medúzy</span>
+              </div>
+            </div>
+
+          </div><!-- /.branches -->
+        </div><!-- /.tree -->
+
+        <div class="footnotes">
+          <div class="footnote-item">
+            <div class="footnote-star">★</div>
+            <span data-cs="druh chovaný v ZOO Mořský svět Praha" data-en="species kept at ZOO Mořský svět Praha">druh chovaný v ZOO Mořský svět Praha</span>
+          </div>
+          <div class="footnote-sep"></div>
+          <div class="footnote-item note-right" style="font-style:italic;">
+            <span data-cs="Žahavci se na Zemi objevili před více než 600 miliony let — přežili všech pět hromadných vymírání" data-en="Cnidarians appeared on Earth more than 600 million years ago — they survived all five mass extinctions">Žahavci se na Zemi objevili před více než 600 miliony let — přežili všech pět hromadných vymírání</span>
+          </div>
+        </div>
+
+        <div class="sheet" id="sheet">
+          <div class="sheet-inner">
+            <div class="sheet-photo" id="sheetPhoto">
+              <div class="sheet-photo-placeholder" data-cs="Foto zástupce<br>bude doplněno" data-en="Representative photo<br>coming soon">Foto zástupce<br>bude doplněno</div>
+            </div>
+            <div class="sheet-body">
+              <div class="sheet-close" onclick="closeSheet()">✕</div>
+              <div class="sheet-name" id="sheetName"></div>
+              <div class="sheet-latin" id="sheetLatin"></div>
+              <div class="sheet-count" id="sheetCount"></div>
+              <ul class="sheet-species" id="sheetSpecies"></ul>
+              <div class="sheet-fact" id="sheetFact"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.tree-page -->
+    </div><!-- /.chapter (žahavci) -->
+
+  </div><!-- /.stage -->
+
+  <!-- FULLSCREEN DETAIL DRUHU MEDÚZY (mimo kapitoly, vždy nad vším) -->
+  <div class="fullscreen" id="fullscreen" onclick="handleFsClick(event)">
+    <div class="fs-photo-side" id="fsPhotoSide">
+      <div class="fs-photo-placeholder" id="fsPhotoPlaceholder">
+        <div class="ph-icon">🪼</div>
+      </div>
+      <img class="fs-photo" id="fsPhoto" src="" alt="" style="display:none"/>
+      <div class="fs-gradient"></div>
+    </div>
+    <div class="fs-text-side">
+      <div class="fs-eyebrow" data-cs="Medúzy světa" data-en="Jellyfish of the World">Medúzy světa</div>
+      <div class="fs-name" id="fsName"></div>
+      <div class="fs-latin" id="fsLatin"></div>
+      <div class="fs-text" id="fsText"></div>
+      <div class="fs-counter" id="fsCounter"></div>
+      <div class="fs-nav">
+        <div class="fs-nav-btn" id="fsPrev" onclick="fsNavigate(-1)">&#8592;</div>
+        <div class="fs-nav-btn" id="fsNext" onclick="fsNavigate(1)">&#8594;</div>
+      </div>
+    </div>
+    <div class="fs-close" onclick="closeFullscreen()">&#x2715;</div>
+  </div>
+
+
+  <!-- ŠIPKY MEZI KAPITOLAMI -->
+  <div class="chapter-arrow prev disabled" id="chapterPrevBtn"><span class="arrow-icon">&#8592;</span><span id="chapterPrevLabel"></span></div>
+  <div class="chapter-arrow next" id="chapterNextBtn"><span id="chapterNextLabel"></span><span class="arrow-icon">&#8594;</span></div>
+
+  <div class="footer">ZOO Mořský svět · www.morskysvet.cz · © 2025 ZOO Mořský svět</div>
+
+</div><!-- /.page -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   SDÍLENÁ NAVIGACE MEZI KAPITOLAMI
+   ═══════════════════════════════════════════════════════════ */
+let lang='cs';
+const chapters=[...document.querySelectorAll('.chapter')];
+let chIdx=0;
+
+function chTitleOf(c){ return lang==='en' ? (c.dataset.titleEn||c.dataset.title) : c.dataset.title; }
+function chTagOf(c){ return lang==='en' ? (c.dataset.tagEn||c.dataset.tag) : c.dataset.tag; }
+
+function updateTopbar(){
+  const c=chapters[chIdx];
+  document.getElementById('chTitle').textContent=chTitleOf(c);
+  document.getElementById('chTag').textContent=chTagOf(c);
+}
+function refreshChapterTabs(){
+  document.querySelectorAll('#chapterTabs .chapter-tab').forEach((b,k)=>{
+    b.textContent=chTitleOf(chapters[k]);
+    b.classList.toggle('active',k===chIdx);
+  });
+}
+function showChapter(i){
+  chIdx=Math.max(0,Math.min(chapters.length-1,i));
+  chapters.forEach((c,k)=>c.classList.toggle('active',k===chIdx));
+  refreshChapterTabs();
+  const prevBtn=document.getElementById('chapterPrevBtn'), nextBtn=document.getElementById('chapterNextBtn');
+  prevBtn.classList.toggle('disabled',chIdx===0);
+  nextBtn.classList.toggle('disabled',chIdx===chapters.length-1);
+  if(chIdx>0) document.getElementById('chapterPrevLabel').textContent=chTitleOf(chapters[chIdx-1]);
+  if(chIdx<chapters.length-1) document.getElementById('chapterNextLabel').textContent=chTitleOf(chapters[chIdx+1]);
+  updateTopbar();
+  if(chIdx===1) setTimeout(drawTreeLines,50); // strom potřebuje přepočítat pozice po zviditelnění
+}
+document.getElementById('chapterPrevBtn').onclick=()=>showChapter(chIdx-1);
+document.getElementById('chapterNextBtn').onclick=()=>showChapter(chIdx+1);
+(function(){
+  const wrap=document.getElementById('chapterTabs');
+  chapters.forEach((c,i)=>{
+    const b=document.createElement('button'); b.className='chapter-tab'; b.textContent=chTitleOf(c);
+    b.onclick=()=>showChapter(i); wrap.appendChild(b);
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   JAZYK (CS/EN)
+   ═══════════════════════════════════════════════════════════ */
+function setLang(l){
+  lang=l;
+  document.getElementById('csBtn').classList.toggle('active', l==='cs');
+  document.getElementById('enBtn').classList.toggle('active', l==='en');
+  document.querySelectorAll('[data-cs]').forEach(el=>{
+    el.innerHTML = (l==='en' ? (el.dataset.en||el.dataset.cs) : el.dataset.cs);
+  });
+  refreshChapterTabs();
+  updateTopbar();
+  if(chIdx>0) document.getElementById('chapterPrevLabel').textContent=chTitleOf(chapters[chIdx-1]);
+  if(chIdx<chapters.length-1) document.getElementById('chapterNextLabel').textContent=chTitleOf(chapters[chIdx+1]);
+  // překreslit otevřený fullscreen detail medúzy, pokud běží
+  if(document.getElementById('fullscreen').classList.contains('active')) renderFs();
+  // překreslit otevřený panel stromu, pokud běží
+  const sheet=document.getElementById('sheet');
+  if(sheet.classList.contains('open') && currentGroupKey){
+    const openTag=document.querySelector('.sp-tag.active');
+    const idx=openTag ? parseInt(openTag.dataset.idx,10) : 0;
+    openSheet(currentGroupKey, activeCard);
+    selectSpecies(idx);
+  }
+}
+document.getElementById('csBtn').onclick=()=>setLang('cs');
+document.getElementById('enBtn').onclick=()=>setLang('en');
+
+
+/* ═══════════════════════════════════════════════════════════
+   KAPITOLA 1 — MEDÚZY SVĚTA
+   ═══════════════════════════════════════════════════════════ */
+const species=[
+  { name:'Talířovka ušatá', nameEn:'Moon jelly', latin:'Aurelia aurita',
+    text:'Nejrozšířenější medúza světa — žije ve všech oceánech od tropů po polární vody. Díky nenáročnosti a snadnému chovu se stala modelovým organismem vědy. Většina toho, co víme o biologii medúz, pochází z výzkumu právě tohoto druhu.',
+    textEn:'The most widespread jellyfish on Earth — found in every ocean from the tropics to polar waters. Thanks to its undemanding nature and ease of breeding, it has become science\u2019s model organism. Most of what we know about jellyfish biology comes from research on this species.',
+    photo:null },
+  { name:'Čtyřhranka smrtelná', nameEn:'Australian box jellyfish', latin:'Chironex fleckeri',
+    text:'Nejjedovatější mořský živočich na světě. Jediný jedinec nese dost jedu k usmrcení 60 lidí. Žije u severního pobřeží Austrálie — v sezóně jsou tamní pláže z tohoto důvodu uzavřeny. Unikátní jsou i její oči: 24 složených očí s rohovkou a sítnicí, které vidí barevně.',
+    textEn:'The most venomous marine animal on Earth. A single individual carries enough venom to kill 60 people. It lives off Australia\u2019s northern coast — beaches there close during its season for this reason. Its eyes are remarkable too: 24 compound eyes with a cornea and retina, capable of seeing in color.',
+    photo:null },
+  { name:'Nesmrtelná medúza', nameEn:'Immortal jellyfish', latin:'Turritopsis dohrnii',
+    text:'Jediný živočich na Zemi, který se dokáže vrátit v čase. Po rozmnožení nebo v případě poranění se transformuje zpět do stádia polypa a celý životní cyklus začne znovu. Biologicky nesmrtelná — teoreticky může tento cyklus opakovat donekonečna.',
+    textEn:'The only animal on Earth that can turn back time. After reproducing or in case of injury, it transforms back into a polyp and the entire life cycle begins again. Biologically immortal — in theory, it can repeat this cycle forever.',
+    photo:null },
+  { name:'Medúzka sladkovodní', nameEn:'Freshwater jellyfish', latin:'Craspedacusta sowerbyi',
+    text:'Jediná sladkovodní medúza na světě — a žije i u nás. Pochází z Číny, do Evropy se dostala náhodně s akvarijními rostlinami. Dorůstá jen 2,5 cm a většinu času tráví jako polyp přichycený ke dnu řek a rybníků.',
+    textEn:'The world\u2019s only freshwater jellyfish — and it lives here too. Native to China, it reached Europe by accident, hidden among imported aquarium plants. It grows to just 2.5 cm and spends most of its life as a polyp attached to the bottom of rivers and ponds.',
+    photo:null },
+  { name:'Talířovka středomořská', nameEn:'Mediterranean jellyfish', latin:'Cotylorhiza tuberculata',
+    text:'Přezdívá se jí "smažené vejce" — žlutooranžový střed zvonu obklopený světlým prstencem. Ve svých tkáních hostí fotosyntetické řasy zooxanthellae, které jí dodávají energii výměnou za úkryt — stejný princip jako u korálů. Žahnutí je pro člověka prakticky nebolestivé.',
+    textEn:'Nicknamed the "fried egg jellyfish" — a yellow-orange bell center ringed by a pale margin. It hosts photosynthetic zooxanthellae algae in its tissue, which supply energy in exchange for shelter — the same principle corals use. Its sting is practically painless to humans.',
+    photo:null },
+];
+
+const CARD_W=560, GAP=24, STEP=CARD_W+GAP;
+let currentIdx=0;
+const total=species.length;
+
+function buildDots(){
+  const dots=document.getElementById('navDots');
+  species.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='nav-dot'+(i===0?' active':'');
+    d.onclick=()=>goTo(i);
+    dots.appendChild(d);
+  });
+}
+function goTo(idx){
+  currentIdx=Math.max(0,Math.min(idx,total-1));
+  document.getElementById('scrollTrack').style.transform=`translateX(-${currentIdx*STEP}px)`;
+  document.querySelectorAll('.nav-dot').forEach((d,i)=>d.classList.toggle('active',i===currentIdx));
+  document.getElementById('prevBtn').classList.toggle('hidden',currentIdx===0);
+  document.getElementById('nextBtn').classList.toggle('hidden',currentIdx===total-1);
+}
+function scrollCards(dir){ goTo(currentIdx+dir); }
+
+let fsIdx=0;
+function openFullscreen(idx){
+  fsIdx=idx; renderFs();
+  document.getElementById('fullscreen').classList.add('active');
+}
+function closeFullscreen(){ document.getElementById('fullscreen').classList.remove('active'); }
+function handleFsClick(e){ if(e.target===document.getElementById('fullscreen')) closeFullscreen(); }
+function renderFs(){
+  const s=species[fsIdx];
+  document.getElementById('fsName').textContent=(lang==='en'?s.nameEn:s.name);
+  document.getElementById('fsLatin').textContent=s.latin;
+  document.getElementById('fsText').textContent=(lang==='en'?s.textEn:s.text);
+  document.getElementById('fsCounter').textContent=`${fsIdx+1} / ${total}`;
+  document.getElementById('fsPrev').classList.toggle('disabled',fsIdx===0);
+  document.getElementById('fsNext').classList.toggle('disabled',fsIdx===total-1);
+  const img=document.getElementById('fsPhoto'), ph=document.getElementById('fsPhotoPlaceholder');
+  if(s.photo){ img.src=s.photo; img.style.display='block'; ph.style.display='none'; }
+  else{ img.style.display='none'; ph.style.display='flex'; }
+}
+function fsNavigate(dir){ fsIdx=Math.max(0,Math.min(fsIdx+dir,total-1)); renderFs(); }
+buildDots();
+
+/* ═══════════════════════════════════════════════════════════
+   KAPITOLA 2 — ŽAHAVCI (STROM)
+   ═══════════════════════════════════════════════════════════ */
+const GROUPS={
+  hex:{ color:'#EF7F1A', name:'Šestičetní', nameEn:'Hexacorals', latin:'Hexacorallia', count:'~4 300 druhů', countEn:'~4,300 species',
+    fact:'Tvoří základ korálových útesů — největších biologických struktur na Zemi.',
+    factEn:'They form the foundation of coral reefs — the largest biological structures on Earth.',
+    species:[
+      {label:'<strong>Větevníci</strong> (Scleractinia)', labelEn:'<strong>Stony corals</strong> (Scleractinia)', name:'Větevníci', nameEn:'Stony corals', photo:'acropora.jpg', credit:'albert kok', fact:'Útesotvorné tvrdé koráli — jejich vápenaté kostry během tisíciletí budují celé korálové útesy.', factEn:'Reef-building hard corals — over millennia, their limestone skeletons construct entire coral reefs.'},
+      {label:'<strong>Sasanky</strong> (Actiniaria)', labelEn:'<strong>Sea anemones</strong> (Actiniaria)', name:'Sasanky', nameEn:'Sea anemones', photo:'actinia.jpg', credit:'Stefan', fact:'Žijí přisedle a netvoří pravé kolonie.', factEn:'They live sessile and don\u2019t form true colonies.'},
+      {label:'<strong>Trnatci</strong> (Antipatharia)', labelEn:'<strong>Black corals</strong> (Antipatharia)', name:'Trnatci', nameEn:'Black corals', photo:'antipathella.jpg', credit:'Susanne Spindler', fact:'Černí koráli — kostra je tmavá, i když živý polyp může mít pestré barvy.', factEn:'Black corals — the skeleton is dark even though the living polyp can be brightly colored.'},
+      {label:'<strong>Červnatci</strong> (Ceriantharia)', labelEn:'<strong>Tube anemones</strong> (Ceriantharia)', name:'Červnatci', nameEn:'Tube anemones', photo:'ceriantharia.jpg', credit:'Bernat Garrigós', fact:'Svou trubici staví z unikátního typu žahavých buněk zvaných ptychocysty. Při ohrožení do ní bleskově zmizí.', factEn:'They build their tube from a unique type of stinging cell called ptychocysts. When threatened, they vanish into it in a flash.'},
+      {label:'<strong>Korálovníci</strong> (Corallimorpharia)', labelEn:'<strong>Mushroom corals</strong> (Corallimorpharia)', name:'Korálovníci', nameEn:'Mushroom corals', photo:'ricordea.jpg', credit:'Blogie Robillo', fact:'Vevnitř jsou stavbou těla identičtí s tvrdými korály, ale nikdy si nevytvářejí vápenatou kostru. Některé druhy dokážou polapit i malou rybku.', factEn:'Internally, their body structure is identical to hard corals, but they never form a limestone skeleton. Some species can even catch small fish.'},
+      {label:'<strong>Sasankovci</strong> (Zoanthidea)', labelEn:'<strong>Zoanthids</strong> (Zoanthidea)', name:'Sasankovci', nameEn:'Zoanthids', photo:'palythoa.jpg', credit:'Gaurav Patil', fact:'Některé druhy obsahují palytoxin — jeden z nejsilnějších neproteinových jedů, jaké příroda zná.', factEn:'Some species contain palytoxin — one of the most potent non-protein toxins known in nature.'}
+    ]},
+  oct:{ color:'#f0a050', name:'Osmičetní', nameEn:'Octocorals', latin:'Octocorallia', count:'~3 000 druhů', countEn:'~3,000 species',
+    fact:'Každý polyp osmičetných má přesně 8 chapadel — odtud název.',
+    factEn:'Every octocoral polyp has exactly 8 tentacles — hence the name.',
+    species:[
+      {label:'<strong>Laločníci</strong> (Malacalcyonacea)', labelEn:'<strong>Soft corals</strong> (Malacalcyonacea)', name:'Laločníci', nameEn:'Soft corals', photo:'sarcophyton.jpg', credit:'Denis Makhnovsky', fact:'Úplně nový vědecký název — tento řád vznikl teprve při přeřazení korálů v roce 2022 a nahradil starou, popletenou klasifikaci "měkkých korálů".', factEn:'A brand-new scientific name — this order was only created during a 2022 coral reclassification, replacing the old, confusing "soft coral" grouping.'},
+      {label:'<strong>Rohovitky</strong> (Gorgonacea)', labelEn:'<strong>Sea fans</strong> (Gorgonacea)', name:'Rohovitky', nameEn:'Sea fans', photo:'gorgonia.jpg', credit:'terence zahner', fact:'Gorgonie — tvoří vějířovité kolonie připomínající větve stromu.', factEn:'Gorgonians — they form fan-shaped colonies resembling tree branches.'},
+      {label:'<strong>Pérovníci</strong> (Pennatulacea)', labelEn:'<strong>Sea pens</strong> (Pennatulacea)', name:'Pérovníci', nameEn:'Sea pens', photo:'sarcoptilus.jpg', credit:'Ian Skipworth', fact:'Mořská pera — kolonie ve tvaru ptačího pera, dokážou částečně zaniknout do sedimentu.', factEn:'Sea pens — feather-shaped colonies that can partly withdraw into the sediment.'},
+      {label:'Modré koráli (Heliopora)', labelEn:'Blue coral (Heliopora)', name:'Modré koráli', nameEn:'Blue coral', photo:'heliopora.jpg', credit:'Tim Cameron', fact:'Jediný osmičetný korál, který si staví masivní vápenatou kostru a skutečně buduje útesy — stejně jako tvrdí koráli.', factEn:'The only octocoral that builds a massive limestone skeleton and genuinely constructs reefs — just like hard corals.'}
+    ]},
+  scy:{ color:'#00d4aa', name:'Medúzovci', nameEn:'True jellyfish', latin:'Scyphozoa', count:'~200 druhů', countEn:'~200 species',
+    fact:'Cyanea capillata má chapadla až 37 metrů dlouhá — delší než modrá velryba.',
+    factEn:'Cyanea capillata has tentacles up to 37 meters long — longer than a blue whale.',
+    species:[
+      {label:'<strong>Chrysaora plocamia ★</strong>', labelEn:'<strong>Chrysaora plocamia ★</strong>', name:'Chrysaora plocamia', star:true, photo:'chrysaora.png', cutout:true, credit:'ZOO Mořský svět Praha', fact:'Druh chovaný přímo v ZOO Mořský svět Praha — talířovka jihoamerická.', factEn:'A species kept right here at ZOO Mořský svět Praha — the South American sea nettle.'},
+      {label:'<strong>Talířovka ušatá</strong> (Aurelia aurita)', labelEn:'<strong>Moon jelly</strong> (Aurelia aurita)', name:'Talířovka ušatá', nameEn:'Moon jelly', photo:'aurelia.jpg', credit:'Bianca Bahlert', fact:'Pozná se snadno shora — čtyři podkovovité gonády prosvítají skrz průhledný zvon jako razítko.', factEn:'Easy to recognize from above — four horseshoe-shaped gonads show through the transparent bell like a stamp.'},
+      {label:'<strong>Talířovka obrovská</strong> (Cyanea capillata)', labelEn:'<strong>Lion\u2019s mane jellyfish</strong> (Cyanea capillata)', name:'Talířovka obrovská', nameEn:'Lion\u2019s mane jellyfish', photo:'cyanea.jpg', credit:'Daniel Rodrigues', fact:'Chapadla až 37 metrů dlouhá — delší než plejtvák.', factEn:'Tentacles up to 37 meters long — longer than a fin whale.'},
+      {label:'<strong>Talířovka svítivá</strong> (Pelagia noctiluca)', labelEn:'<strong>Mauve stinger</strong> (Pelagia noctiluca)', name:'Talířovka svítivá', nameEn:'Mauve stinger', photo:'pelagia.jpg', credit:'josepvilanova', fact:'Jako jediná z čeledi úplně vynechává stádium polypa a navíc při vyrušení bioluminiscenčně zazáří.', factEn:'The only member of its family to skip the polyp stage entirely — and it glows bioluminescently when disturbed.'},
+      {label:'Kořenovky (Rhizostomeae)', labelEn:'Root-mouthed jellyfish (Rhizostomeae)', name:'Kořenovky', nameEn:'Root-mouthed jellyfish', photo:'cotylorhiza.jpg', credit:'Marek Koszorek', fact:'Nemají žádná chapadla — místo nich 8 srostlých ústních ramen posetých drobnými sacími otvůrky na cezení planktonu.', factEn:'They have no tentacles at all — instead, 8 fused oral arms studded with tiny suction pores for filtering plankton.'},
+      {label:'Korunkatky (Coronatae)', labelEn:'Crown jellyfish (Coronatae)', name:'Korunkatky', nameEn:'Crown jellyfish', photo:'periphylla.jpg', credit:'Jackson W.F. Chu', fact:'Většinou hlubinné medúzy, které se při doteku rozsvítí vlastním světlem, aby zmátly predátora.', factEn:'Mostly deep-sea jellyfish that light up with their own bioluminescence when touched, to confuse predators.'}
+    ]},
+  hyd:{ color:'#00A0E3', name:'Polypovci', nameEn:'Hydrozoans', latin:'Hydrozoa', count:'~3 700 druhů', countEn:'~3,700 species',
+    fact:'Turritopsis dohrnii se po rozmnožení dokáže vrátit do stádia polypa — biologicky nesmrtelná.',
+    factEn:'Turritopsis dohrnii can revert to the polyp stage after reproducing — biologically immortal.',
+    species:[
+      {label:'<strong>Měchýřovka portug.</strong> (Physalia physalis)', labelEn:'<strong>Portuguese man o\u2019 war</strong> (Physalia physalis)', name:'Měchýřovka portugalská', nameEn:'Portuguese man o\u2019 war', photo:'physalia.jpg', credit:'Gonzalo Giribet', fact:'Ve skutečnosti kolonie mnoha jedinců, ne jeden organismus.', factEn:'Actually a colony of many individuals, not a single organism.'},
+      {label:'<strong>Nezmar</strong> (Hydra vulgaris)', labelEn:'<strong>Hydra</strong> (Hydra vulgaris)', name:'Nezmar', nameEn:'Hydra', photo:'hydra.jpg', credit:'Proyecto Agua', fact:'Nestárne v běžném slova smyslu — díky neustále se obnovujícím kmenovým buňkám je podle některých vědců prakticky biologicky nesmrtelný.', factEn:'It doesn\u2019t age in the usual sense — thanks to constantly renewing stem cells, some scientists consider it practically biologically immortal.'},
+      {label:'<strong>Nesmrtelná medúza</strong> (Turritopsis dohrnii)', labelEn:'<strong>Immortal jellyfish</strong> (Turritopsis dohrnii)', name:'Nesmrtelná medúza', nameEn:'Immortal jellyfish', photo:'turritopsis.jpg', credit:'Bachware', fact:'Dokáže se po rozmnožení vrátit do stádia polypa — biologicky nesmrtelná.', factEn:'Can revert to the polyp stage after reproducing — biologically immortal.'},
+      {label:'Trubýši (Siphonophora)', labelEn:'Siphonophores (Siphonophora)', name:'Trubýši', nameEn:'Siphonophores', photo:'nanomia.jpg', credit:'Karen Cram', fact:'Příbuzný druh (Praya dubia) měří až 40–50 metrů a je možná nejdelší živočich na Zemi — jenže není to jeden organismus, ale kolonie tisíců specializovaných jedinců.', factEn:'A relative (Praya dubia) reaches 40\u201350 meters and may be the longest animal on Earth — except it isn\u2019t one organism, but a colony of thousands of specialized individuals.'},
+      {label:'Medúzka sladkovodní (Craspedacusta sowerbyi)', labelEn:'Freshwater jellyfish (Craspedacusta sowerbyi)', name:'Medúzka sladkovodní', nameEn:'Freshwater jellyfish', photo:'craspedacusta.jpg', credit:'Павлик Лисицын', fact:'Pochází z čínské řeky Jang-c\'-ťiang, do Evropy se v 19. století dostala skrytá mezi dováženými leknínami — dnes žije i u nás.', factEn:'Native to China\u2019s Yangtze River, it reached Europe in the 19th century hidden among imported water lilies — today it lives here too.'}
+    ]},
+  cub:{ color:'#E84855', name:'Čtyřhranky', nameEn:'Box jellyfish', latin:'Cubozoa', count:'~50 druhů', countEn:'~50 species',
+    fact:'Mají 24 složených očí s rohovkou a sítnicí — vidí barevně lépe než člověk.',
+    factEn:'They have 24 compound eyes with a cornea and retina — they see color better than humans do.',
+    species:[
+      {label:'<strong>Čtyřhranka smrtelná</strong> (Chironex fleckeri)', labelEn:'<strong>Australian box jellyfish</strong> (Chironex fleckeri)', name:'Čtyřhranka smrtelná', nameEn:'Australian box jellyfish', photo:'chironex.jpg', credit:'Tsu Soo Tan', fact:'Jed dokáže zabít člověka během několika minut — nejnebezpečnější medúza na světě.', factEn:'Its venom can kill a person within minutes — the most dangerous jellyfish in the world.'},
+      {label:'Carybdea marsupialis', labelEn:'Carybdea marsupialis', name:'Carybdea marsupialis', nameEn:'Carybdea marsupialis', photo:'carybdea.jpg', credit:'Sylvain Le Bris', fact:'Jediná krychlovka žijící ve Středomoří — má propracované oči s čočkou, kterými doslova vidí překážky a umí se jim vyhnout.', factEn:'The only box jellyfish living in the Mediterranean — it has sophisticated lensed eyes that let it literally see obstacles and dodge them.'},
+      {label:'Irukandji (Malo kingi)', labelEn:'Irukandji (Malo kingi)', name:'Irukandji', nameEn:'Irukandji', fact:'Jen 2 cm velká, ale způsobuje takzvaný Irukandji syndrom.', factEn:'Just 2 cm across, yet it causes what\u2019s known as Irukandji syndrome.'}
+    ]},
+  sta:{ color:'#a080e0', name:'Kalichovky', nameEn:'Stalked jellyfish', latin:'Staurozoa', count:'~50 druhů', countEn:'~50 species',
+    fact:'Přisedlé stopkaté medúzy — neplavou, žijí přichycené ke kamenům ve studených mořích.',
+    factEn:'Sessile stalked jellyfish — they don\u2019t swim, living attached to rocks in cold seas.',
+    species:[
+      {label:'Calvadosia cruxmelitensis', labelEn:'Calvadosia cruxmelitensis', name:'Calvadosia cruxmelitensis', nameEn:'Calvadosia cruxmelitensis', fact:'Sotva 1 cm velká — žahavé buňky na těle tvoří nápadný vzor připomínající maltézský kříž, odtud latinské jméno.', factEn:'Barely 1 cm across — the stinging cells on its body form a striking pattern resembling a Maltese cross, hence the Latin name.'},
+      {label:'Haliclystus auricula', labelEn:'Haliclystus auricula', name:'Haliclystus auricula', nameEn:'Haliclystus auricula', photo:'haliclystus.jpg', credit:'Bianca Bahlert', fact:'Přezdívaná "kaleidoskopická medúza" díky nálevkovitému tvaru s barevnými rozevlátými rameny.', factEn:'Nicknamed the "kaleidoscope jellyfish" for its funnel shape with colorful flowing arms.'},
+      {label:'Lucernaria quadricornis', labelEn:'Lucernaria quadricornis', name:'Lucernaria quadricornis', nameEn:'Lucernaria quadricornis', fact:'Umí se odpoutat od stopky a doslova "chodit" po mořském dně na svých ramenech jako na nožkách.', factEn:'Can detach from its stalk and literally "walk" across the seafloor on its arms like legs.'}
+    ]}
+};
+
+let activeCard=null;
+let currentGroupKey=null;
+
+function openSheet(key,cardEl){
+  const g=GROUPS[key];
+  if(!g) return;
+  currentGroupKey=key;
+  const sheet=document.getElementById('sheet');
+  sheet.style.setProperty('--sc',g.color);
+  document.getElementById('sheetName').textContent=(lang==='en'?g.nameEn:g.name);
+  document.getElementById('sheetLatin').textContent=g.latin;
+  document.getElementById('sheetCount').textContent=(lang==='en'?g.countEn:g.count);
+  document.getElementById('sheetSpecies').innerHTML=g.species.map((s,i)=>
+    '<li class="sp-tag" data-idx="'+i+'" onclick="selectSpecies('+i+', event)">'+(lang==='en'?(s.labelEn||s.label):s.label)+'</li>'
+  ).join('');
+  sheet.classList.add('open');
+  if(activeCard) activeCard.classList.remove('active');
+  if(cardEl){ cardEl.classList.add('active'); activeCard=cardEl; }
+  const defaultIdx=g.species.findIndex(s=>s.star);
+  selectSpecies(defaultIdx>=0?defaultIdx:0);
+}
+function selectSpecies(idx,ev){
+  const g=GROUPS[currentGroupKey];
+  if(!g) return;
+  const s=g.species[idx];
+  if(!s) return;
+  if(ev) ev.stopPropagation();
+  document.querySelectorAll('.sp-tag').forEach(t=>t.classList.remove('active'));
+  const tag=document.querySelector('.sp-tag[data-idx="'+idx+'"]');
+  if(tag) tag.classList.add('active');
+  const sName=(lang==='en'?(s.nameEn||s.name):s.name);
+  const photoEl=document.getElementById('sheetPhoto');
+  const t_missing = lang==='en' ? 'Photo: '+sName+'<br>missing file: '+s.photo : 'Foto: '+sName+'<br>chybí soubor: '+s.photo;
+  const t_soon = lang==='en' ? 'Photo: '+sName+'<br>coming soon' : 'Foto: '+sName+'<br>bude doplněno';
+  if(s.photo){
+    const cls=s.cutout?' class="cutout"':'';
+    photoEl.innerHTML=
+      '<img src="images/zahavci/'+s.photo+'" alt="'+sName+'"'+cls+' '+
+      'onerror="this.parentElement.innerHTML=\'<div class=&quot;sheet-photo-placeholder&quot;>'+t_missing+'</div>\'">'+
+      (s.credit?'<div class="sheet-photo-credit">© '+s.credit+'</div>':'');
+  } else {
+    photoEl.innerHTML='<div class="sheet-photo-placeholder">'+t_soon+'</div>';
+  }
+  document.getElementById('sheetFact').textContent=(lang==='en'?(s.factEn||g.factEn):(s.fact||g.fact));
+}
+function closeSheet(){
+  document.getElementById('sheet').classList.remove('open');
+  if(activeCard){ activeCard.classList.remove('active'); activeCard=null; }
+  currentGroupKey=null;
+}
+document.addEventListener('click',(e)=>{
+  const sheet=document.getElementById('sheet');
+  if(!sheet.classList.contains('open')) return;
+  if(e.target.closest('.sheet')||e.target.closest('.group-card')) return;
+  closeSheet();
+});
+
+function drawTreeLines(){
+  const tree=document.getElementById('tree');
+  const svg=document.getElementById('treeLines');
+  if(!tree||!svg) return;
+  const T=tree.getBoundingClientRect();
+  svg.setAttribute('viewBox','0 0 '+T.width+' '+T.height);
+  const W='2';
+  const bottomOf=el=>{const r=el.getBoundingClientRect();return {x:r.left-T.left+r.width/2, y:r.bottom-T.top};};
+  const topOf=el=>{const r=el.getBoundingClientRect();return {x:r.left-T.left+r.width/2, y:r.top-T.top};};
+  let out='';
+  const path=(d,c,o)=>{out+='<path d="'+d+'" fill="none" stroke="'+c+'" stroke-opacity="'+o+'" stroke-width="'+W+'" stroke-linecap="round"/>';};
+  const elbow=(a,b,c,o)=>{const my=a.y+(b.y-a.y)/2;
+    path('M '+a.x+' '+a.y+' L '+a.x+' '+my+' L '+b.x+' '+my+' L '+b.x+' '+b.y, c, o);};
+  const root=document.getElementById('nodeRoot');
+  const anth=document.getElementById('nodeAnth');
+  const med=document.getElementById('nodeMed');
+  if(root&&anth&&med){
+    elbow(bottomOf(root), topOf(anth), '#ffffff', 0.35);
+    elbow(bottomOf(root), topOf(med), '#ffffff', 0.35);
+  }
+  if(anth){
+    const a=bottomOf(anth);
+    document.querySelectorAll('.anthozoa-groups .group-card').forEach(card=>{
+      elbow(a, topOf(card), '#EF7F1A', 0.45);
+    });
+  }
+  if(med){
+    const m=bottomOf(med);
+    document.querySelectorAll('.medusozoa-groups .group-card').forEach(card=>{
+      elbow(m, topOf(card), '#00A0E3', 0.45);
+    });
+  }
+  svg.innerHTML=out;
+}
+window.addEventListener('load',drawTreeLines);
+window.addEventListener('resize',drawTreeLines);
+
+/* ═══════════════════════════════════════════════════════════
+   START + AUTO-RESET
+   ═══════════════════════════════════════════════════════════ */
+showChapter(0);
+
+(function(){
+  var T=180*1000, t;
+  function r(){ clearTimeout(t); t=setTimeout(function(){ location.href='index.html'; }, T); }
+  ["mousemove","mousedown","touchstart","touchmove","keydown","click"].forEach(function(e){
+    document.addEventListener(e,r,{passive:true});
+  });
+  r();
+})();
+</script>
+</body>
+</html>

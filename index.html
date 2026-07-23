@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>Medúzy — ZOO Mořský svět Praha</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap');
+
+:root {
+  --bg:     #001a2e;
+  --navy:   #004469;
+  --blue:   #00A0E3;
+  --orange: #EF7F1A;
+  --white:  #ffffff;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  width: 1920px; height: 1080px;
+  overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--white);
+}
+.page{ width:1920px; height:1080px; display:flex; flex-direction:column; }
+
+/* ===== HEADER ===== */
+.header{
+  height:82px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 56px;
+  background:var(--navy);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.logo{display:flex; align-items:center; gap:12px;}
+.logo img{height:22px; width:auto;}
+.logo-text{font-size:18px; font-weight:700; letter-spacing:0.5px;}
+
+.lang{display:flex; gap:4px; background:rgba(0,25,46,0.5); border-radius:11px; padding:5px;}
+.lang button{font-family:inherit; font-size:14px; font-weight:600; letter-spacing:.05em;
+  border:none; border-radius:7px; padding:9px 18px; cursor:pointer;
+  background:transparent; color:rgba(255,255,255,0.45);}
+.lang button.active{background:var(--blue); color:#fff;}
+
+/* ===== HERO ===== */
+.hero{ flex-shrink:0; height:498px; display:grid; grid-template-columns:1.05fr 1fr; }
+.hero-photo{ position:relative; overflow:hidden; background:#000; }
+.hero-photo img{ width:100%; height:100%; object-fit:cover; object-position:center 22%; display:block; }
+.hero-photo-placeholder{ width:100%; height:100%;
+  background:linear-gradient(160deg,#001525 0%,#002845 50%,#001a2e 100%);
+  display:flex; align-items:center; justify-content:center; }
+.hero-photo-placeholder .ph-text{ font-size:13px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.15); }
+.hero-gradient{ position:absolute; top:0; right:0; width:180px; height:100%;
+  background:linear-gradient(to right, transparent, var(--bg)); pointer-events:none; }
+.hero-gradient-bottom{ position:absolute; bottom:0; left:0; right:0; height:120px;
+  background:linear-gradient(to top, var(--bg), transparent); pointer-events:none; }
+
+.hero-text{ padding:0 80px 0 64px; display:flex; flex-direction:column; justify-content:center; }
+.eyebrow{ font-size:12px; font-weight:700; letter-spacing:5px; color:var(--orange);
+  text-transform:uppercase; margin-bottom:18px; }
+.hero-title{ font-size:92px; font-weight:700; line-height:0.95; margin-bottom:10px; letter-spacing:-1px; }
+.hero-latin{ font-size:22px; font-weight:300; font-style:italic; color:rgba(255,255,255,0.55); margin-bottom:26px; }
+.hero-perex{ font-size:21px; font-weight:300; color:rgba(255,255,255,0.72); line-height:1.6; max-width:560px; }
+
+/* ===== KARTY ===== */
+.cards-row{ flex:1; min-height:0; display:flex; border-top:1px solid rgba(255,255,255,0.08); }
+.card{
+  flex:1; min-height:0; position:relative; overflow:hidden; cursor:pointer; text-decoration:none; color:inherit;
+  display:flex; flex-direction:column;
+  border-right:1px solid rgba(255,255,255,0.06);
+  background:#00243d;
+  transition:transform 0.25s, box-shadow 0.25s;
+}
+.card:last-child{ border-right:none; }
+.card:hover{ transform:translateY(-4px); box-shadow:0 16px 40px rgba(0,0,0,0.4); z-index:2; }
+
+.card-photo-wrap{ position:relative; flex:1.35; min-height:0; overflow:hidden; }
+.card-photo-wrap img{ width:100%; height:100%; object-fit:cover; transition:transform 0.4s ease; display:block; }
+.card:hover .card-photo-wrap img{ transform:scale(1.06); }
+.card-photo-placeholder{ width:100%; height:100%;
+  background:linear-gradient(135deg, #001a2e, #002540);
+  display:flex; align-items:center; justify-content:center; font-size:40px; opacity:0.25; }
+.card-photo-gradient{ position:absolute; left:0; right:0; bottom:0; height:60%;
+  background:linear-gradient(to top, #00243d 0%, rgba(0,36,61,0.55) 55%, transparent 100%);
+  pointer-events:none; }
+
+.card-body{ flex:1; padding:20px 32px 24px; display:flex; flex-direction:column; gap:6px; position:relative; }
+.card-label{ font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--card-color, var(--blue)); }
+.card-title{ font-size:26px; font-weight:700; line-height:1.15; color:var(--white); }
+.card-desc{ font-size:14.5px; font-weight:300; color:rgba(255,255,255,0.55); line-height:1.5; max-width:88%; }
+.card-arrow{
+  position:absolute; right:28px; bottom:22px;
+  width:40px; height:40px; border-radius:50%;
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18);
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; font-weight:700; color:var(--card-color, var(--blue));
+  transition:background .2s;
+}
+.card:hover .card-arrow{ background:var(--card-color, var(--blue)); color:#fff; }
+
+.card-1{ --card-color:#00d4aa; }
+.card-2{ --card-color:var(--blue); }
+.card-3{ --card-color:var(--orange); }
+
+/* ===== FOOTER ===== */
+.footer{
+  height:52px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 56px;
+  font-size:12px; font-weight:300; color:rgba(255,255,255,0.3); letter-spacing:0.5px;
+  border-top:1px solid rgba(255,255,255,0.06);
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <img src="images/logo-icon.png" alt="Mořský svět">
+      <div class="logo-text">MOŘSKÝ SVĚT</div>
+    </div>
+    <div class="lang">
+      <button id="csBtn" class="active">CS</button>
+      <button id="enBtn">EN</button>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-photo">
+      <img src="images/chrysaora-clean.jpg" alt="Chrysaora plocamia">
+      <div class="hero-gradient"></div>
+      <div class="hero-gradient-bottom"></div>
+    </div>
+    <div class="hero-text">
+      <div class="eyebrow">ZOO Mořský svět · Praha</div>
+      <div class="hero-title" data-cs="Medúzy" data-en="Jellyfish">Medúzy</div>
+      <div class="hero-perex" data-cs="Jsou tu déle než dinosauři. Přežily pět hromadných vymírání. A zatímco dnes mnoho druhů mizí — jim se daří. Co to říká o stavu našich oceánů?" data-en="They&#8217;ve been here longer than dinosaurs. They survived five mass extinctions. And while many species are vanishing today — they&#8217;re thriving. What does that say about the state of our oceans?">
+        Jsou tu déle než dinosauři. Přežily pět hromadných vymírání. A zatímco dnes mnoho druhů mizí — jim se daří. Co to říká o stavu našich oceánů?
+      </div>
+    </div>
+  </div>
+
+  <!-- KARTY -->
+  <div class="cards-row">
+
+    <a class="card card-1" href="druh.html">
+      <div class="card-photo-wrap">
+        <img src="images/chrysaora-clean.jpg" alt="Talířovka jihoamerická" style="object-position:center 30%;">
+        <div class="card-photo-gradient"></div>
+      </div>
+      <div class="card-body">
+        <div class="card-label" data-cs="Druh v akváriu" data-en="In the Aquarium">Druh v akváriu</div>
+        <div class="card-title" data-cs="Talířovka jihoamerická" data-en="Sea Nettle">Talířovka jihoamerická</div>
+        <div class="card-desc" data-cs="Kdo to je, kde žije a proč je výjimečná." data-en="Who she is, where she lives, and what makes her special.">Kdo to je, kde žije a proč je výjimečná.</div>
+        <div class="card-arrow">→</div>
+      </div>
+    </a>
+
+    <a class="card card-2" href="jednoduchost.html">
+      <div class="card-photo-wrap">
+        <img src="images/zahavci/aurelia.jpg" alt="Dokonalá jednoduchost">
+        <div class="card-photo-gradient"></div>
+      </div>
+      <div class="card-body">
+        <div class="card-label" data-cs="Biologie" data-en="Biology">Biologie</div>
+        <div class="card-title" data-cs="Dokonalá jednoduchost" data-en="Perfect Simplicity">Dokonalá jednoduchost</div>
+        <div class="card-desc" data-cs="Jak funguje medúza — tělo, pohyb, žahavé buňky, životní cyklus." data-en="How a jellyfish works — body, movement, stinging cells, life cycle.">Jak funguje medúza — tělo, pohyb, žahavé buňky, životní cyklus.</div>
+        <div class="card-arrow">→</div>
+      </div>
+    </a>
+
+    <a class="card card-3" href="zahavci.html">
+      <div class="card-photo-wrap">
+        <img src="images/zahavci/actinia.jpg" alt="Žahavci">
+        <div class="card-photo-gradient"></div>
+      </div>
+      <div class="card-body">
+        <div class="card-label" data-cs="Systematika" data-en="Systematics">Systematika</div>
+        <div class="card-title" data-cs="Žahavci" data-en="Cnidarians">Žahavci</div>
+        <div class="card-desc" data-cs="Medúzy světa, koráli, sasanky — kmen žahavců." data-en="Jellyfish of the world, corals, sea anemones — the cnidarian phylum.">Medúzy světa, koráli, sasanky — kmen žahavců.</div>
+        <div class="card-arrow">→</div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Patička -->
+  <div class="footer">
+    <div>ZOO Mořský svět · www.morskysvet.cz</div>
+    <div>© 2025 ZOO Mořský svět</div>
+  </div>
+
+</div>
+
+<script>
+function setLang(l){
+  document.getElementById('csBtn').classList.toggle('active', l==='cs');
+  document.getElementById('enBtn').classList.toggle('active', l==='en');
+  document.querySelectorAll('[data-cs]').forEach(el=>{
+    el.innerHTML = (l==='en' ? (el.dataset.en||el.dataset.cs) : el.dataset.cs);
+  });
+}
+document.getElementById('csBtn').onclick=()=>setLang('cs');
+document.getElementById('enBtn').onclick=()=>setLang('en');
+</script>
+</body>
+</html>

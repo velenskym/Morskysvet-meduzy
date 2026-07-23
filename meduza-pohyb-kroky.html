@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medúza — pohyb v krocích</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#00A0E3; --navy:#004469; --deeper:#00325a;
+    --orange:#EF7F1A; --bg:#001a2e; --start:#4fc3ff; --stop:#EF7F1A;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#fff;overflow:hidden;user-select:none;}
+  #stage{position:fixed;inset:0;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+  /* horní levý panel */
+  .panel{
+    position:absolute;top:22px;left:22px;z-index:5;
+    background:rgba(0,25,46,0.72);backdrop-filter:blur(10px);
+    border:1px solid rgba(0,160,227,0.22);border-radius:16px;
+    padding:15px 17px;display:flex;flex-direction:column;gap:11px;min-width:210px;
+  }
+  .panel h1{font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.85);}
+  .row{display:flex;gap:8px;flex-wrap:wrap;}
+  button.ctl{
+    font-family:inherit;font-size:12.5px;font-weight:500;color:rgba(255,255,255,0.72);
+    background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+    border-radius:9px;padding:7px 12px;cursor:pointer;transition:all .18s;
+  }
+  button.ctl:hover{background:rgba(0,160,227,0.16);color:#fff;}
+  button.ctl.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+  /* jazyk */
+  .lang{position:absolute;top:22px;right:22px;z-index:5;display:flex;gap:4px;
+    background:rgba(0,25,46,0.72);backdrop-filter:blur(10px);border-radius:11px;padding:5px;}
+  .lang button{font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.05em;
+    border:none;border-radius:7px;padding:8px 18px;cursor:pointer;background:transparent;color:rgba(255,255,255,0.4);}
+  .lang button.active{background:var(--blue);color:#fff;}
+
+  /* spodní krokový panel */
+  .steps{
+    position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:5;
+    width:min(760px,92vw);background:rgba(0,25,46,0.78);backdrop-filter:blur(12px);
+    border:1px solid rgba(0,160,227,0.22);border-radius:20px;padding:22px 26px 18px;
+  }
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--blue);}
+  .eyebrow.warm{color:var(--orange);}
+  .s-title{font-size:26px;font-weight:700;line-height:1.15;margin-top:6px;}
+  .s-desc{font-size:15.5px;font-weight:300;line-height:1.6;color:rgba(255,255,255,0.72);margin-top:8px;min-height:50px;}
+  .nav{display:flex;align-items:center;justify-content:space-between;margin-top:16px;gap:14px;}
+  .dots{display:flex;gap:9px;}
+  .dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.18);cursor:pointer;transition:all .2s;}
+  .dot.active{background:var(--blue);transform:scale(1.25);}
+  .dot.done{background:rgba(0,160,227,0.5);}
+  .nav-btn{
+    font-family:inherit;font-size:15px;font-weight:600;color:#fff;
+    background:var(--blue);border:none;border-radius:11px;padding:11px 22px;cursor:pointer;transition:all .18s;
+  }
+  .nav-btn:hover{filter:brightness(1.1);}
+  .nav-btn.ghost{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);}
+  .nav-btn.ghost:disabled{opacity:0.3;cursor:default;}
+  .nav-btn.warm{background:var(--orange);}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c"></canvas></div>
+
+<div class="panel">
+  <h1 data-cs="Pohyb medúzy" data-en="Jellyfish propulsion">Pohyb medúzy</h1>
+  <div class="row">
+    <button class="ctl on" id="btnAnno" data-cs="Popisky" data-en="Labels">Popisky</button>
+    <button class="ctl on" id="btnParts" data-cs="Proudění" data-en="Flow">Proudění</button>
+    <button class="ctl" id="btnAuto" data-cs="Auto" data-en="Auto">Auto</button>
+  </div>
+</div>
+
+<div class="lang">
+  <button id="csBtn" class="active">CS</button>
+  <button id="enBtn">EN</button>
+</div>
+
+<div class="steps">
+  <div class="eyebrow" id="eyebrow">Krok 1 / 5</div>
+  <div class="s-title" id="sTitle" data-cs="" data-en=""></div>
+  <div class="s-desc"  id="sDesc"  data-cs="" data-en=""></div>
+  <div class="nav">
+    <button class="nav-btn ghost" id="prevBtn" data-cs="← Zpět" data-en="← Back">← Zpět</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="nextBtn" data-cs="Další krok →" data-en="Next step →">Další krok →</button>
+  </div>
+</div>
+
+<script>
+/* ═══ PLÁTNO ═══ */
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1,centerX=0,bellCenterY=0,S=1;
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=cv.clientWidth;H=cv.clientHeight;
+  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+  centerX=W*0.5; bellCenterY=H*0.40; S=Math.min(W,H)/620;
+}
+window.addEventListener('resize',resize);
+
+/* ═══ KROKY (zastávky na časové ose p) ═══ */
+const STEPS=[
+  {j:0.00, warm:false,
+   tcs:"Výchozí stav", ten:"At rest",
+   dcs:"Medúza nemá kostru ani ploutve. Pohybuje se rytmickým stahováním a uvolňováním zvonovitého těla. Tento jednoduchý pohyb je nejefektivnější způsob plavání v živočišné říši. Jak to? Stojí za tím geniální biomechanický hack, kterým medúza vyzraje na fyziku vody.",
+   den:"A jellyfish has no skeleton and no fins. It moves in a single way — by rhythmically contracting and relaxing its bell-shaped body. This simple motion is the most efficient form of swimming in the animal kingdom. How? Behind it lies a brilliant piece of biomechanical physics-hacking."},
+  {j:0.30, warm:false,
+   tcs:"Stah zvonu", ten:"Bell contraction",
+   dcs:"Svaly na spodní straně zvonu se stáhnou a vytlačí vodu z dutiny pod zvonem ven. Tento proud žene medúzu vpřed. Na pružném okraji zvonu přitom vzniká hnací vír.",
+   den:"Muscles on the underside of the bell contract and push water out of the subumbrellar cavity. This jet drives the jellyfish forward. At the flexible bell margin, a starting vortex forms."},
+  {j:0.50, warm:false,
+   tcs:"Hnací vír v brázdě", ten:"The starting vortex in the wake",
+   dcs:"Hnací vír se uvolní od okraje zvonu a zůstává za medúzou — v proudu, který se táhne za jejím tělem (brázda). Stejný proud vody přitom unáší plankton (drobné mořské organismy) k jejím ramenům. Táž práce tak slouží zároveň k pohybu vpřed i k lovu.",
+   den:"The starting vortex releases from the bell margin and stays behind the jellyfish, in the current trailing its body (the wake). That same flow carries plankton (tiny marine organisms) toward its arms. A single effort serves both propulsion and feeding at once."},
+  {j:0.66, warm:true,
+   tcs:"Znovuplnění zvonu", ten:"Refilling the bell",
+   dcs:"Po stahu se pružná rosolovitá tkáň zvonu (mezoglea) sama vrátí do původního tvaru a nasaje vodu zpět do dutiny. Uvnitř dutiny se přitom roztočí druhý vírový prstenec — brzdný vír — s opačným smyslem rotace než ten první.",
+   den:"After the contraction, the bell's elastic jelly-like tissue (mesoglea) springs back to its original shape and draws water back into the cavity. As it does, a second vortex ring — the stopping vortex — spins up inside the cavity, rotating in the opposite direction to the first."},
+  {j:0.92, warm:true,
+   tcs:"Druhý impulz zdarma", ten:"A second impulse, for free",
+   dcs:"Brzdný vír žene vodu vzhůru proti vnitřní stěně zvonu a vytváří tam přetlak, který medúzu popostrčí dopředu podruhé. Tento druhý impulz nestojí žádnou svalovou práci — pohání ho jen pružnost tkáně. Právě díky tomuto zpětnému zachycení energie (rekuperaci) plave medúza úsporněji než kterýkoli jiný známý živočich.",
+   den:"The stopping vortex pushes water up against the inner wall of the bell, creating a high-pressure zone that nudges the jellyfish forward a second time. This second impulse costs no muscular effort — it is powered purely by the elasticity of the tissue. Thanks to this passive energy recapture, the jellyfish swims more efficiently than any other known animal."}
+];
+
+const view={
+  idx:0, curJ:0, startJ:0, endJ:0, twT:0, twDur:0, tweening:false, wrapping:false,
+  anno:true, parts:true, auto:false, lastAdvance:0, lang:'cs', clock:0,
+  contractFrac:0.34
+};
+
+// odtržený rozjezdový vír žije v brázdě vlastním (reálným) časem
+const wake={active:false, y:0, sx:0, str:0, R:0, vy:0};
+let prevContracting=true;
+const WAKE_LIFE=8.0, WAKE_DRIFT=26;   // s ; px/s (×S) — pomalý rovnoměrný sesun
+
+/* ═══ EASING ═══ */
+const easeOutCubic=t=>1-Math.pow(1-t,3);
+const easeInCubic=t=>t*t*t;
+const easeInOut=t=>t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+/* ═══ DOPŘEDNÝ POSUN (nahoru = vpřed) ═══
+   narůstá při stahu (krok 2) a při rekuperaci (krok 5), na konci cyklu se vrátí */
+const TRAVEL={stroke:44, recap:40, coast:8}; // ← ladicí: záběr stahu / rekuperace / setrvačnost (×S)
+const smoothstep=t=>t*t*(3-2*t);
+function travelOffset(p){
+  const cf=view.contractFrac;
+  const T1=TRAVEL.stroke*S, T2=TRAVEL.recap*S, CO=TRAVEL.coast*S;
+  if(p<cf){                          // stah — hlavní záběr vpřed
+    return -T1*easeOutCubic(p/cf);
+  }
+  if(p<0.60){                        // doznívání — setrvačný dokluz
+    return -(T1+CO*((p-cf)/(0.60-cf)));
+  }
+  if(p<0.92){                        // rekuperace — druhý záběr vpřed
+    return -((T1+CO)+(T2-CO)*smoothstep((p-0.60)/(0.92-0.60)));
+  }
+  return -(T1+T2)*(1-smoothstep((p-0.92)/(1-0.92))); // závěrečný skluz do výchozí pozice
+}
+
+/* ═══ KINEMATIKA z fáze p ═══ */
+function kinematics(p){
+  const cf=view.contractFrac; let o,contracting,c=0,r=0;
+  if(p<cf){ c=p/cf; contracting=true;  o=1-easeOutCubic(c); }
+  else    { r=(p-cf)/(1-cf); contracting=false; o=1-Math.pow(1-r,2); }
+
+  // rozjezdový vír se tvoří na okraji jen během stahu; po odtržení ho převezme brázda
+  let startStr,shed;
+  if(contracting){ startStr=easeInCubic(c); shed=0; }
+  else{ startStr=0; shed=r; }
+
+  // zastavovací vír roste až v pozdější relaxaci (aby se kroky nepřekrývaly)
+  let stopStr;
+  if(contracting){ stopStr=0; }
+  else{ const u=clamp((r-0.22)/0.62,0,1); stopStr=(u*u*(3-2*u))*1.15; }
+
+  let bob;
+  if(contracting){ bob=-14*S*easeOutCubic(c)*0.72; }
+  else{
+    const back=-10*S*(1-r);
+    const recap=-14*S*0.42*Math.sin(Math.PI*clamp(r/0.5,0,1));
+    bob=back+recap;
+  }
+  return {o,contracting,c,r,startStr,stopStr,shed,bob,travel:travelOffset(p)};
+}
+
+/* ═══ TVAR ZVONU ═══ */
+const curBell={bellW:0,bellH:0,rimDY:0,cavityDepth:0,flex:0,bob:0};
+const FLEX=1.0; // ← síla ohebnosti okraje; zvyš/sniž dle vkusu
+function updateBell(K){
+  const o=K.o;
+  const Wmax=152*S, Wmin=86*S;      // víc sevřený při stahu
+  const Hcon=166*S, Hrel=108*S;     // stažený výrazně vyšší/užší
+  curBell.bellW=Wmin+(Wmax-Wmin)*o;
+  curBell.bellH=Hcon+(Hrel-Hcon)*o;
+  curBell.flex=(1-o)*FLEX;
+  curBell.cavityDepth=(48+34*o)*S;
+  const yOff=K.bob+K.travel;        // stroke bob + čistý dopředný posun
+  curBell.rimDY=curBell.bellH*0.5+yOff;
+  curBell.bob=yOff;
+}
+
+function drawBell(K){
+  const cx=centerX;
+  const bw=curBell.bellW, bh=curBell.bellH, flex=curBell.flex, cav=curBell.cavityDepth, bob=curBell.bob;
+  const apexY=bellCenterY-bh*0.5+bob;
+  const rimY =bellCenterY+bh*0.5+bob;
+
+  // ohebný okraj: silné podvinutí + pokles + jemné zavlnění
+  const wobble=Math.sin(view.clock*3.0)*3*S*flex;
+  const tipX = bw*(1 - 0.36*flex);
+  const tipY = rimY + (38*S)*flex + wobble;
+  const curlUp = 22*S*flex;   // lem se pod zvonem stáčí vzhůru
+
+  // ── orální ramena (za zvonem) ──
+  const armCount=4;
+  for(let a=0;a<armCount;a++){
+    const off=(a-(armCount-1)/2);
+    const baseX=cx+off*bw*0.16, baseY=rimY-6*S;
+    ctx.beginPath(); ctx.moveTo(baseX,baseY);
+    const len=(155+K.startStr*45)*S, seg=10;
+    for(let s=1;s<=seg;s++){
+      const f=s/seg;
+      const sway=Math.sin(view.clock*2.2+f*4+a)*(10+18*f)*S*(0.5+0.5*K.startStr);
+      ctx.lineTo(baseX+off*8*S+sway, baseY+f*len);
+    }
+    ctx.strokeStyle='rgba(120,190,235,0.16)';
+    ctx.lineWidth=(9-a*0.4)*S; ctx.lineCap='round'; ctx.stroke();
+  }
+
+  // ── marginální tykadla ──
+  ctx.strokeStyle='rgba(150,205,240,0.22)'; ctx.lineCap='round';
+  const tent=9;
+  for(let i=0;i<tent;i++){
+    const f=i/(tent-1);
+    const bx=cx+(f*2-1)*tipX;
+    const by=tipY - 6*S + 8*S*flex*(1-Math.abs(f*2-1));
+    ctx.beginPath(); ctx.moveTo(bx,by);
+    const len=(92+70*Math.abs(f*2-1))*S, seg=8;
+    for(let s=1;s<=seg;s++){
+      const g=s/seg;
+      const sway=Math.sin(view.clock*3+f*8+g*5)*(6+10*g)*S;
+      ctx.lineTo(bx+(f*2-1)*4*S+sway, by+g*len);
+    }
+    ctx.lineWidth=2.4*S; ctx.stroke();
+  }
+
+  // ── tělo zvonu ──
+  const grad=ctx.createRadialGradient(cx,apexY+bh*0.2,bh*0.1, cx,apexY+bh*0.3,bw*1.4);
+  grad.addColorStop(0,'rgba(120,205,245,0.60)');
+  grad.addColorStop(0.55,'rgba(0,160,227,0.34)');
+  grad.addColorStop(1,'rgba(0,90,150,0.14)');
+
+  ctx.beginPath();
+  // exumbrela (horní kupole)
+  ctx.moveTo(cx-tipX,tipY);
+  ctx.bezierCurveTo(cx-bw*0.72,apexY-bh*0.10, cx-bw*0.30,apexY-bh*0.02, cx,apexY);
+  ctx.bezierCurveTo(cx+bw*0.30,apexY-bh*0.02, cx+bw*0.72,apexY-bh*0.10, cx+tipX,tipY);
+  // subumbrela (konkávní dutina) — s podvinutým lemem u špiček (curlUp)
+  ctx.bezierCurveTo(cx+bw*0.58, rimY-cav+curlUp, cx+bw*0.28, rimY-cav*0.70, cx, rimY-cav*0.70);
+  ctx.bezierCurveTo(cx-bw*0.28, rimY-cav*0.70, cx-bw*0.58, rimY-cav+curlUp, cx-tipX,tipY);
+  ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+  ctx.strokeStyle='rgba(180,230,255,0.55)'; ctx.lineWidth=2*S; ctx.stroke();
+
+  // horní odlesk
+  ctx.beginPath();
+  ctx.moveTo(cx-bw*0.4,apexY+bh*0.06);
+  ctx.quadraticCurveTo(cx,apexY-bh*0.06,cx+bw*0.4,apexY+bh*0.06);
+  ctx.strokeStyle='rgba(255,255,255,0.32)'; ctx.lineWidth=3*S; ctx.stroke();
+
+  // vnitřní kanálky
+  ctx.save(); ctx.globalAlpha=0.22; ctx.strokeStyle='#bfe9ff'; ctx.lineWidth=1.6*S;
+  for(let k=-1;k<=1;k++){
+    ctx.beginPath();
+    ctx.moveTo(cx+k*bw*0.28,apexY+bh*0.28);
+    ctx.lineTo(cx+k*bw*0.42,rimY-cav*0.5); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ═══ VÍRY (indukovaná rychlost) ═══ */
+const tmp={x:0,y:0};
+function vortex(px,py,cx,cy,sign,str,coreR){
+  const dx=px-cx,dy=py-cy,r2=dx*dx+dy*dy,r=Math.sqrt(r2)+1e-3;
+  const vt=str*(1-Math.exp(-r2/(coreR*coreR)))/r;
+  tmp.x+=sign*(-dy)*vt/r*900;
+  tmp.y+=sign*( dx)*vt/r*900;
+}
+// pozice rozjezdového víru během tvorby: na okraji zvonu
+function startVortexPos(K){
+  const rimY=bellCenterY+curBell.rimDY, bw=curBell.bellW;
+  return {sx:bw*0.9, sy:rimY+16*S, R:26*S};
+}
+// pozice zastavovacího víru: uvnitř subumbrelární dutiny pod zvonem
+function stopVortexPos(K){
+  const rimY=bellCenterY+curBell.rimDY, bw=curBell.bellW;
+  return {tx:bw*0.5, ty:rimY-curBell.cavityDepth*0.55, R:40*S};
+}
+function flowAt(px,py,K){
+  tmp.x=0;tmp.y=0;
+  const rimY=bellCenterY+curBell.rimDY, bw=curBell.bellW;
+  // rozjezdový vír: tvorba na okraji během stahu
+  if(K.startStr>0.01){
+    const sv=startVortexPos(K);
+    vortex(px,py,centerX+sv.sx,sv.sy,-1,K.startStr*0.9,sv.R*0.9);
+    vortex(px,py,centerX-sv.sx,sv.sy,+1,K.startStr*0.9,sv.R*0.9);
+  }
+  // odtržený vír žijící v brázdě (reálný čas)
+  if(wake.active){
+    vortex(px,py,centerX+wake.sx,wake.y,-1,wake.str*0.85,wake.R);
+    vortex(px,py,centerX-wake.sx,wake.y,+1,wake.str*0.85,wake.R);
+  }
+  // zastavovací vír pod zvonem, opačná rotace
+  const tv=stopVortexPos(K);
+  vortex(px,py,centerX+tv.tx,tv.ty,+1,K.stopStr*0.85,tv.R);
+  vortex(px,py,centerX-tv.tx,tv.ty,-1,K.stopStr*0.85,tv.R);
+  // centrální jet dolů při stahu
+  if(K.contracting){
+    const jx=px-centerX,jy=py-rimY;
+    if(jy>0&&Math.abs(jx)<bw*0.8)
+      tmp.y+=K.startStr*70*S*Math.exp(-(jx*jx)/(2*(bw*0.5)*(bw*0.5)))*Math.exp(-jy/(200*S));
+  }
+  tmp.y+=2*S;
+  return tmp;
+}
+
+/* ═══ ČÁSTICE ═══ */
+const NP=950, P=new Float32Array(NP*4);
+function spawn(i){
+  const ang=Math.random()*Math.PI*2, rad=(120+Math.random()*260)*S;
+  P[i*4]=centerX+Math.cos(ang)*rad*1.15;
+  P[i*4+1]=bellCenterY+Math.sin(ang)*rad*0.9-30*S;
+  P[i*4+2]=P[i*4]; P[i*4+3]=P[i*4+1];
+}
+function seedAll(){for(let i=0;i<NP;i++)spawn(i);}
+
+/* ═══ POPISKY / SPIRÁLY VÍRŮ ═══ */
+function drawAnnotations(K){
+  // tvořící se rozjezdový vír na okraji (při stahu)
+  if(K.startStr>0.12){
+    const sv=startVortexPos(K), a=0.7*K.startStr;
+    spiral(centerX+sv.sx,sv.sy,sv.R,-1,'rgba(79,195,255,'+a+')');
+    spiral(centerX-sv.sx,sv.sy,sv.R,+1,'rgba(79,195,255,'+a+')');
+    if(K.startStr>0.38) tag(centerX+sv.sx+sv.R+28*S,sv.sy, view.lang==='cs'?'Hnací vír':'Starting vortex','#4fc3ff',0.9*K.startStr);
+  }
+  // odtržený vír plynoucí do brázdy (reálný čas)
+  if(wake.active && wake.str>0.1){
+    const a=0.7*Math.min(wake.str,1);
+    spiral(centerX+wake.sx,wake.y,wake.R,-1,'rgba(79,195,255,'+a+')');
+    spiral(centerX-wake.sx,wake.y,wake.R,+1,'rgba(79,195,255,'+a+')');
+    if(wake.str>0.3) tag(centerX+wake.sx+wake.R+28*S,wake.y, view.lang==='cs'?'Hnací vír':'Starting vortex','#4fc3ff',0.85*wake.str);
+  }
+  if(K.stopStr>0.18){
+    const tv=stopVortexPos(K), a=0.72*Math.min(K.stopStr,1);
+    spiral(centerX+tv.tx,tv.ty,tv.R,+1,'rgba(239,127,26,'+a+')');
+    spiral(centerX-tv.tx,tv.ty,tv.R,-1,'rgba(239,127,26,'+a+')');
+    if(K.stopStr>0.5) tag(centerX,tv.ty-tv.R-24*S, view.lang==='cs'?'Brzdný vír':'Stopping vortex','#EF7F1A',Math.min(K.stopStr,1));
+  }
+}
+// rotující spirála = stáčející se vír; smysl vinutí + rotace dané znaménkem
+function spiral(cx,cy,R,sign,color){
+  const turns=1.75, N=54, rot=view.clock*2.1*sign;
+  ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=2.4*S; ctx.lineCap='round';
+  ctx.beginPath();
+  let ex=cx,ey=cy,eang=0;
+  for(let i=0;i<=N;i++){
+    const f=i/N, theta=sign*(f*turns*Math.PI*2)+rot, rr=R*f;
+    const x=cx+Math.cos(theta)*rr, y=cy+Math.sin(theta)*rr;
+    if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    ex=x;ey=y;eang=theta;
+  }
+  ctx.stroke();
+  // hrot na vnějším konci ve směru rotace (tangenta)
+  const aang=Math.atan2(Math.cos(eang)*sign, -Math.sin(eang)*sign), ah=10*S;
+  ctx.beginPath();
+  ctx.moveTo(ex,ey); ctx.lineTo(ex-Math.cos(aang-0.5)*ah, ey-Math.sin(aang-0.5)*ah);
+  ctx.moveTo(ex,ey); ctx.lineTo(ex-Math.cos(aang+0.5)*ah, ey-Math.sin(aang+0.5)*ah);
+  ctx.stroke(); ctx.restore();
+}
+function tag(x,y,text,color,alpha){
+  ctx.save(); ctx.globalAlpha=clamp(alpha,0,1);
+  ctx.font='600 '+(15*S)+'px "DM Sans"';
+  const w=ctx.measureText(text).width, pad=9*S;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(0,20,38,0.72)';
+  roundRect(x-w/2-pad,y-13*S,w+pad*2,26*S,8*S); ctx.fill();
+  ctx.fillStyle=color; ctx.fillText(text,x,y); ctx.restore();
+}
+function roundRect(x,y,w,h,r){
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+
+/* ═══ SMYČKA ═══ */
+let last=performance.now();
+function frame(now){
+  const dt=(now-last)/1000; last=now; view.clock+=dt;
+
+  // tween mezi kroky
+  if(view.tweening){
+    view.twT+=dt;
+    const k=clamp(view.twT/view.twDur,0,1);
+    view.curJ=lerp(view.startJ,view.endJ,easeInOut(k));
+    if(k>=1){
+      view.tweening=false; view.curJ=view.endJ;
+      if(view.wrapping){ view.curJ=0; view.startJ=0; view.endJ=0; view.wrapping=false; }
+    }
+  }
+  // auto-režim
+  if(view.auto && !view.tweening && (view.clock-view.lastAdvance)>4.2){ nextStep(); }
+
+  const p=((view.curJ%1)+1)%1;
+  const K=kinematics(p);
+  updateBell(K);
+
+  // brázda: odtržení = sestupná hrana stahu; poté žije v reálném čase
+  const rimYnow=bellCenterY+curBell.rimDY;
+  if(prevContracting && !K.contracting){
+    wake.active=true; wake.str=1.0;
+    wake.sx=curBell.bellW*0.9; wake.y=rimYnow+16*S;
+    wake.R=26*S; wake.vy=WAKE_DRIFT*S;
+  }
+  prevContracting=K.contracting;
+  if(wake.active){
+    wake.y  += wake.vy*dt;          // rovnoměrný pomalý sesun do brázdy
+    wake.vy *= (1-0.30*dt);         // jen mírně zpomaluje
+    wake.sx += 10*S*dt;             // prstenec se roztahuje
+    wake.R  += 12*S*dt;             // a roste
+    wake.str -= dt/WAKE_LIFE;       // slábne
+    if(wake.str<=0.02 || wake.y>H+60) wake.active=false;
+  }
+
+  // pozadí + stopy částic
+  if(view.parts){
+    ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle='rgba(0,26,46,0.20)'; ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    for(let i=0;i<NP;i++){
+      const ix=i*4; let x=P[ix],y=P[ix+1];
+      const v=flowAt(x,y,K);
+      const nx=x+v.x*dt, ny=y+v.y*dt;
+      const rimY=bellCenterY+curBell.rimDY;
+      const inCavity=(ny<rimY-6*S)&&(Math.abs(nx-centerX)<curBell.bellW*0.8);
+      const col=inCavity?'239,127,26':'90,190,255';
+      const sp=Math.hypot(v.x,v.y), al=clamp(0.10+sp/900,0.06,0.5);
+      ctx.strokeStyle='rgba('+col+','+al+')'; ctx.lineWidth=1.4*S;
+      ctx.beginPath(); ctx.moveTo(P[ix+2],P[ix+3]); ctx.lineTo(nx,ny); ctx.stroke();
+      P[ix]=nx;P[ix+1]=ny;P[ix+2]=x;P[ix+3]=y;
+      if(ny>H+40||nx<-60||nx>W+60||ny<-80) spawn(i);
+    }
+    ctx.globalCompositeOperation='source-over';
+  } else {
+    ctx.fillStyle='rgba(0,26,46,1)'; ctx.fillRect(0,0,W,H);
+  }
+
+  drawBell(K);
+  if(view.anno) drawAnnotations(K);
+  if(view.running!==false) requestAnimationFrame(frame);
+}
+
+/* ═══ NAVIGACE KROKŮ ═══ */
+function setTarget(j){
+  view.startJ=view.curJ; view.endJ=j;
+  view.twDur=clamp(Math.abs(j-view.curJ)*3.6,0.8,1.9);
+  view.twT=0; view.tweening=true; view.lastAdvance=view.clock;
+}
+function goStep(i){ view.idx=i; setTarget(STEPS[i].j); updatePanel(); }
+function nextStep(){
+  if(view.idx<STEPS.length-1){ goStep(view.idx+1); }
+  else { // smyčka: dokonči cyklus do klidu, pak zpět na krok 1
+    view.wrapping=true; view.startJ=view.curJ; view.endJ=1.0;
+    view.twDur=clamp(Math.abs(1.0-view.curJ)*3.6,0.8,1.9);
+    view.twT=0; view.tweening=true; view.lastAdvance=view.clock;
+    view.idx=0; updatePanel();
+  }
+}
+function prevStep(){ if(view.idx>0) goStep(view.idx-1); }
+
+/* ═══ PANEL / JAZYK ═══ */
+function applyLang(){
+  document.querySelectorAll('[data-cs]').forEach(el=>{
+    el.textContent = view.lang==='en' ? (el.dataset.en||el.dataset.cs) : el.dataset.cs;
+  });
+}
+function updatePanel(){
+  const s=STEPS[view.idx];
+  document.getElementById('eyebrow').textContent=(view.lang==='cs'?'Krok ':'Step ')+(view.idx+1)+' / '+STEPS.length;
+  document.getElementById('eyebrow').className='eyebrow'+(s.warm?' warm':'');
+  const t=document.getElementById('sTitle'); t.dataset.cs=s.tcs; t.dataset.en=s.ten;
+  const d=document.getElementById('sDesc'); d.dataset.cs=s.dcs; d.dataset.en=s.den;
+  t.textContent=view.lang==='cs'?s.tcs:s.ten;
+  d.textContent=view.lang==='cs'?s.dcs:s.den;
+  document.getElementById('prevBtn').disabled=(view.idx===0);
+  const nb=document.getElementById('nextBtn');
+  const lastStep=(view.idx===STEPS.length-1);
+  nb.textContent= lastStep ? (view.lang==='cs'?'Znovu ↻':'Replay ↻') : (view.lang==='cs'?'Další krok →':'Next step →');
+  nb.className='nav-btn'+(lastStep?' warm':'');
+  // tečky
+  document.querySelectorAll('#dots .dot').forEach((dot,i)=>{
+    dot.className='dot'+(i===view.idx?' active':(i<view.idx?' done':''));
+  });
+}
+function buildDots(){
+  const wrap=document.getElementById('dots'); wrap.innerHTML='';
+  STEPS.forEach((_,i)=>{
+    const d=document.createElement('div'); d.className='dot';
+    d.onclick=()=>goStep(i); wrap.appendChild(d);
+  });
+}
+
+/* ═══ EVENTY ═══ */
+document.getElementById('nextBtn').onclick=nextStep;
+document.getElementById('prevBtn').onclick=prevStep;
+document.getElementById('btnAnno').onclick=e=>{view.anno=!view.anno;e.target.classList.toggle('on',view.anno);};
+document.getElementById('btnParts').onclick=e=>{view.parts=!view.parts;e.target.classList.toggle('on',view.parts);if(view.parts)seedAll();};
+document.getElementById('btnAuto').onclick=e=>{view.auto=!view.auto;e.target.classList.toggle('on',view.auto);view.lastAdvance=view.clock;};
+document.getElementById('csBtn').onclick=()=>{view.lang='cs';document.getElementById('csBtn').classList.add('active');document.getElementById('enBtn').classList.remove('active');applyLang();updatePanel();};
+document.getElementById('enBtn').onclick=()=>{view.lang='en';document.getElementById('enBtn').classList.add('active');document.getElementById('csBtn').classList.remove('active');applyLang();updatePanel();};
+
+/* ═══ START ═══ */
+resize(); seedAll(); buildDots(); view.curJ=STEPS[0].j; updatePanel(); applyLang();
+requestAnimationFrame(frame);
+
+/* ═══ VLOŽENÍ DO STRÁNKY (jednoduchost.html) ═══
+   ?embed=1 skryje vlastní CS/EN (jazyk řídí stránka) a umožní pauzu mimo obrazovku */
+(function(){
+  const embedded = new URLSearchParams(location.search).get('embed')==='1';
+  if(embedded){ const l=document.querySelector('.lang'); if(l) l.style.display='none'; }
+  function extSetLang(lang){
+    if(lang!=='cs'&&lang!=='en') return;
+    view.lang=lang;
+    document.getElementById('csBtn').classList.toggle('active',lang==='cs');
+    document.getElementById('enBtn').classList.toggle('active',lang==='en');
+    applyLang(); updatePanel();
+  }
+  function play(){ if(view.running===false){ view.running=true; last=performance.now(); requestAnimationFrame(frame); } }
+  function pause(){ view.running=false; }
+  window.addEventListener('message',ev=>{
+    const d=ev.data||{};
+    if(d.type==='lang') extSetLang(d.lang);
+    else if(d.type==='active'){ d.active?play():pause(); }
+  });
+  // vystavit i přímé volání (kdyby stránka sáhla do iframu napřímo)
+  window.meduzaSetLang=extSetLang; window.meduzaPlay=play; window.meduzaPause=pause;
+})();
+
+</script>
+</body>
+</html>

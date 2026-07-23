@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>Chrysaora plocamia</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap');
+
+:root {
+  --bg:     #001a2e;
+  --bg2:    #004469;
+  --blue:   #00A0E3;
+  --orange: #EF7F1A;
+  --white:  #ffffff;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  width: 1920px; height: 1080px;
+  overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--white);
+}
+
+/* ===== LAYOUT ===== */
+.page {
+  width: 1920px; height: 1080px;
+  display: grid;
+  grid-template-columns: 860px 1fr;
+  grid-template-rows: 1fr auto auto;
+}
+
+/* ===== TOPBAR (překryv nad fotkou i textem) ===== */
+.topbar{
+  position:absolute; top:0; left:0; right:0; height:96px; z-index:50;
+  display:flex; align-items:stretch; justify-content:flex-end;
+  background:linear-gradient(to bottom, rgba(0,10,20,0.55), transparent);
+  pointer-events:none;
+}
+.back-home{
+  position:absolute; left:0; top:0; bottom:0; width:114px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,50,90,0.4); border-right:1px solid rgba(255,255,255,0.1);
+  cursor:pointer; transition:background .2s; pointer-events:auto;
+}
+.back-home:hover{background:var(--blue);}
+.back-home .back-arrow{font-size:34px; color:#fff; line-height:1;}
+.lang{align-self:center; margin:0 56px; pointer-events:auto;
+  display:flex; gap:4px; background:rgba(0,25,46,0.55); border-radius:11px; padding:5px;}
+.lang button{font-family:inherit; font-size:14px; font-weight:600; letter-spacing:.05em;
+  border:none; border-radius:7px; padding:9px 18px; cursor:pointer;
+  background:transparent; color:rgba(255,255,255,0.45);}
+.lang button.active{background:var(--blue); color:#fff;}
+
+/* ===== PATIČKA ===== */
+.footer{
+  grid-column: 2;
+  display:flex; align-items:center;
+  padding:0 56px; height:44px;
+  font-size:11px; font-weight:300; color:rgba(255,255,255,0.3); letter-spacing:0.5px;
+  border-top:1px solid rgba(255,255,255,0.06);
+}
+
+/* ===== FOTO ===== */
+.photo-side {
+  grid-row: 1 / 4;
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-side img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-placeholder {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #001525 0%, #002540 60%, #001a2e 100%);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px;
+}
+.photo-placeholder .ph-text {
+  font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+}
+
+/* Gradient přechod foto → text */
+.photo-gradient {
+  position: absolute;
+  top: 0; right: 0;
+  width: 180px; height: 100%;
+  background: linear-gradient(to right, transparent, var(--bg));
+  pointer-events: none;
+}
+
+/* ===== TEXT ČÁST ===== */
+.text-side {
+  padding: 64px 72px 0 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* Eyebrow */
+.eyebrow {
+  font-size: 12px; font-weight: 700; letter-spacing: 5px;
+  color: var(--blue); text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* Název -->  */
+.species-name {
+  font-size: 64px; font-weight: 700; line-height: 1;
+  margin-bottom: 6px;
+}
+.species-latin {
+  font-size: 22px; font-weight: 300; font-style: italic;
+  color: var(--blue); margin-bottom: 6px;
+}
+.species-en {
+  font-size: 16px; font-weight: 300;
+  color: rgba(255,255,255,0.4); margin-bottom: 32px;
+  letter-spacing: 1px;
+}
+
+/* Oddělovač -->  */
+.divider {
+  width: 48px; height: 2px;
+  background: var(--blue); opacity: 0.5;
+  margin-bottom: 28px;
+}
+
+/* Text -->  */
+.description {
+  font-size: 20px; font-weight: 300;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.65;
+  margin-bottom: 28px;
+  flex-shrink: 0;
+}
+
+/* Mapa + fakty vedle sebe -->  */
+.bottom-row {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Mapa -->  */
+.map-wrap {
+  flex-shrink: 0;
+  width: 280px;
+}
+.map-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  margin-bottom: 10px;
+}
+.map-placeholder {
+  width: 280px; height: 280px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #001525, #002540);
+  border: 1px solid rgba(0,160,227,0.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px;
+}
+.map-placeholder .ph-icon { font-size: 32px; opacity: 0.15; }
+.map-placeholder .ph-text {
+  font-size: 11px; letter-spacing: 2px;
+  color: rgba(255,255,255,0.2); text-transform: uppercase;
+}
+
+/* Fakty -->  */
+.facts {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.fact-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-left: 16px;
+  border-left: 2px solid rgba(0,160,227,0.3);
+}
+.fact-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--blue); opacity: 0.8;
+}
+.fact-value {
+  font-size: 17px; font-weight: 300;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.4;
+}
+
+/* ===== STATS BAR ===== -->  */
+.stats-bar {
+  grid-column: 2;
+  background: rgba(0,68,105,0.4);
+  border-top: 1px solid rgba(0,160,227,0.15);
+  display: flex;
+  align-items: stretch;
+  height: 88px;
+  padding: 0 56px;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 24px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.stat-item:first-child { padding-left: 0; }
+.stat-item:last-child  { border-right: none; }
+
+.stat-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+}
+.stat-value {
+  font-size: 28px; font-weight: 700; color: var(--white);
+  line-height: 1;
+}
+.stat-unit {
+  font-size: 14px; font-weight: 300;
+  color: rgba(255,255,255,0.5); margin-left: 4px;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOPBAR (překryv) -->
+  <div class="topbar">
+    <div class="back-home" onclick="location.href='index.html'" role="button" aria-label="Zpět na úvod / Back to home">
+      <span class="back-arrow">&#8592;</span>
+    </div>
+    <div class="lang">
+      <button id="csBtn" class="active">CS</button>
+      <button id="enBtn">EN</button>
+    </div>
+  </div>
+
+  <!-- FOTO -->
+  <div class="photo-side">
+    <img src="images/chrysaora-clean.jpg" alt="Chrysaora plocamia">
+    <div class="photo-gradient"></div>
+  </div>
+
+  <!-- TEXT -->
+  <div class="text-side">
+    <div class="eyebrow" data-cs="Druh v akváriu" data-en="In the Aquarium">Druh v akváriu</div>
+    <div class="species-name" data-cs="Talířovka<br>jihoamerická" data-en="South American<br>Sea Nettle">Talířovka<br>jihoamerická</div>
+    <div class="species-latin">Chrysaora plocamia</div>
+    <div class="species-en" data-cs="South American sea nettle" data-en="">South American sea nettle</div>
+    <div class="divider"></div>
+    <div class="description" data-cs="Jeden z větších druhů medúz. Obývá pobřeží Jižní Ameriky — od Peru podél Pacifiku přes Chile až po Ohňovou zemi, a severně podél atlantického pobřeží Argentiny. Výskyt úzce souvisí s Humboldtovým proudem a cyklem El Niño." data-en="One of the larger jellyfish species. It inhabits the coast of South America — from Peru along the Pacific through Chile to Tierra del Fuego, and north along Argentina&#8217;s Atlantic coast. Its range is closely tied to the Humboldt Current and the El Ni&ntilde;o cycle.">
+      Jeden z větších druhů medúz. Obývá pobřeží Jižní Ameriky — od Peru podél Pacifiku přes Chile až po Ohňovou zemi, a severně podél atlantického pobřeží Argentiny. Výskyt úzce souvisí s Humboldtovým proudem a cyklem El Niño.
+    </div>
+
+    <div class="bottom-row">
+      <!-- Mapa -->
+      <div class="map-wrap">
+        <div class="map-label" data-cs="Rozšíření" data-en="Range">Rozšíření</div>
+        <img src="images/mapa-plocamia.png" alt="Mapa rozšíření Chrysaora plocamia" style="width:280px;height:280px;border-radius:12px;object-fit:cover;border:1px solid rgba(0,160,227,0.2);">
+      </div>
+
+      <!-- Fakty -->
+      <div class="facts">
+        <div class="fact-item">
+          <div class="fact-label" data-cs="Potrava" data-en="Diet">Potrava</div>
+          <div class="fact-value" data-cs="Plankton, menší medúzy, malé ryby" data-en="Plankton, smaller jellyfish, small fish">Plankton, menší medúzy, malé ryby</div>
+        </div>
+        <div class="fact-item">
+          <div class="fact-label" data-cs="Predátoři" data-en="Predators">Predátoři</div>
+          <div class="fact-value" data-cs="Kožatka velká, kareta zelená, kareta olivová" data-en="Leatherback turtle, green turtle, olive ridley turtle">Kožatka velká, kareta zelená, kareta olivová</div>
+        </div>
+        <div class="fact-item">
+          <div class="fact-label" data-cs="Zajímavost" data-en="Did You Know">Zajímavost</div>
+          <div class="fact-value" data-cs="V letech El Niño populace výrazně narůstají — biomasa může přesáhnout biomasu sardinek v celém regionu" data-en="During El Ni&ntilde;o years, populations surge dramatically — their biomass can exceed that of sardines across the entire region">V letech El Niño populace výrazně narůstají — biomasa může přesáhnout biomasu sardinek v celém regionu</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-label" data-cs="Průměr zvonu" data-en="Bell diameter">Průměr zvonu</div>
+      <div class="stat-value">50–60 <span class="stat-unit">cm</span></div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label" data-cs="Max. průměr" data-en="Max diameter">Max. průměr</div>
+      <div class="stat-value">1 <span class="stat-unit">m</span></div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label" data-cs="Délka ramen" data-en="Arm length">Délka ramen</div>
+      <div class="stat-value">až 3 <span class="stat-unit">m</span></div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label" data-cs="Výskyt" data-en="Range">Výskyt</div>
+      <div class="stat-value" style="font-size:20px;" data-cs="Jižní Amerika" data-en="South America">Jižní Amerika</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label" data-cs="Třída" data-en="Class">Třída</div>
+      <div class="stat-value" style="font-size:20px;" data-cs="Medúzovci" data-en="True jellyfish">Medúzovci</div>
+    </div>
+  </div>
+
+  <!-- PATIČKA -->
+  <div class="footer">ZOO Mořský svět · www.morskysvet.cz · © 2025 ZOO Mořský svět</div>
+
+</div>
+
+<script>
+function setLang(l){
+  document.getElementById('csBtn').classList.toggle('active', l==='cs');
+  document.getElementById('enBtn').classList.toggle('active', l==='en');
+  document.querySelectorAll('[data-cs]').forEach(el=>{
+    el.innerHTML = (l==='en' ? (el.dataset.en??el.dataset.cs) : el.dataset.cs);
+  });
+}
+document.getElementById('csBtn').onclick=()=>setLang('cs');
+document.getElementById('enBtn').onclick=()=>setLang('en');
+
+(function(){
+  var T=180*1000, t;
+  function r(){ clearTimeout(t); t=setTimeout(function(){ location.href='index.html'; }, T); }
+  ["mousemove","mousedown","touchstart","touchmove","keydown","click"].forEach(function(e){
+    document.addEventListener(e,r,{passive:true});
+  });
+  r();
+})();
+</script>
+</body>
+</html>
