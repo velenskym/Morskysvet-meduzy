@@ -294,10 +294,7 @@ body{
           <div class="scroll-track" id="scrollTrack">
 
             <div class="card" onclick="openFullscreen(0)">
-              <div class="card-photo-placeholder">
-                <div class="ph-icon">🪼</div>
-                <div class="ph-text" data-cs="Foto bude doplněno" data-en="Photo coming soon">Foto bude doplněno</div>
-              </div>
+              <img class="card-photo" src="images/zahavci/aurelia.jpg" alt="Talířovka ušatá">
               <div class="card-photo-gradient"></div>
               <div class="card-expand">⤢</div>
               <div class="card-body">
@@ -308,10 +305,7 @@ body{
             </div>
 
             <div class="card" onclick="openFullscreen(1)">
-              <div class="card-photo-placeholder">
-                <div class="ph-icon">🪼</div>
-                <div class="ph-text" data-cs="Foto bude doplněno" data-en="Photo coming soon">Foto bude doplněno</div>
-              </div>
+              <img class="card-photo" src="images/zahavci/chironex.jpg" alt="Čtyřhranka smrtelná">
               <div class="card-photo-gradient"></div>
               <div class="card-expand">⤢</div>
               <div class="card-body">
@@ -322,10 +316,7 @@ body{
             </div>
 
             <div class="card" onclick="openFullscreen(2)">
-              <div class="card-photo-placeholder">
-                <div class="ph-icon">🪼</div>
-                <div class="ph-text" data-cs="Foto bude doplněno" data-en="Photo coming soon">Foto bude doplněno</div>
-              </div>
+              <img class="card-photo" src="images/zahavci/turritopsis.jpg" alt="Nesmrtelná medúza">
               <div class="card-photo-gradient"></div>
               <div class="card-expand">⤢</div>
               <div class="card-body">
@@ -336,10 +327,7 @@ body{
             </div>
 
             <div class="card" onclick="openFullscreen(3)">
-              <div class="card-photo-placeholder">
-                <div class="ph-icon">🪼</div>
-                <div class="ph-text" data-cs="Foto bude doplněno" data-en="Photo coming soon">Foto bude doplněno</div>
-              </div>
+              <img class="card-photo" src="images/zahavci/craspedacusta.jpg" alt="Medúzka sladkovodní">
               <div class="card-photo-gradient"></div>
               <div class="card-expand">⤢</div>
               <div class="card-body">
@@ -350,10 +338,7 @@ body{
             </div>
 
             <div class="card" onclick="openFullscreen(4)">
-              <div class="card-photo-placeholder">
-                <div class="ph-icon">🪼</div>
-                <div class="ph-text" data-cs="Foto bude doplněno" data-en="Photo coming soon">Foto bude doplněno</div>
-              </div>
+              <img class="card-photo" src="images/zahavci/cotylorhiza.jpg" alt="Talířovka středomořská">
               <div class="card-photo-gradient"></div>
               <div class="card-expand">⤢</div>
               <div class="card-body">
@@ -621,23 +606,23 @@ const species=[
   { name:'Talířovka ušatá', nameEn:'Moon jelly', latin:'Aurelia aurita',
     text:'Nejrozšířenější medúza světa — žije ve všech oceánech od tropů po polární vody. Díky nenáročnosti a snadnému chovu se stala modelovým organismem vědy. Většina toho, co víme o biologii medúz, pochází z výzkumu právě tohoto druhu.',
     textEn:'The most widespread jellyfish on Earth — found in every ocean from the tropics to polar waters. Thanks to its undemanding nature and ease of breeding, it has become science\u2019s model organism. Most of what we know about jellyfish biology comes from research on this species.',
-    photo:null },
+    photo:'images/zahavci/aurelia.jpg' },
   { name:'Čtyřhranka smrtelná', nameEn:'Australian box jellyfish', latin:'Chironex fleckeri',
     text:'Nejjedovatější mořský živočich na světě. Jediný jedinec nese dost jedu k usmrcení 60 lidí. Žije u severního pobřeží Austrálie — v sezóně jsou tamní pláže z tohoto důvodu uzavřeny. Unikátní jsou i její oči: 24 složených očí s rohovkou a sítnicí, které vidí barevně.',
     textEn:'The most venomous marine animal on Earth. A single individual carries enough venom to kill 60 people. It lives off Australia\u2019s northern coast — beaches there close during its season for this reason. Its eyes are remarkable too: 24 compound eyes with a cornea and retina, capable of seeing in color.',
-    photo:null },
+    photo:'images/zahavci/chironex.jpg' },
   { name:'Nesmrtelná medúza', nameEn:'Immortal jellyfish', latin:'Turritopsis dohrnii',
     text:'Jediný živočich na Zemi, který se dokáže vrátit v čase. Po rozmnožení nebo v případě poranění se transformuje zpět do stádia polypa a celý životní cyklus začne znovu. Biologicky nesmrtelná — teoreticky může tento cyklus opakovat donekonečna.',
     textEn:'The only animal on Earth that can turn back time. After reproducing or in case of injury, it transforms back into a polyp and the entire life cycle begins again. Biologically immortal — in theory, it can repeat this cycle forever.',
-    photo:null },
+    photo:'images/zahavci/turritopsis.jpg' },
   { name:'Medúzka sladkovodní', nameEn:'Freshwater jellyfish', latin:'Craspedacusta sowerbyi',
     text:'Jediná sladkovodní medúza na světě — a žije i u nás. Pochází z Číny, do Evropy se dostala náhodně s akvarijními rostlinami. Dorůstá jen 2,5 cm a většinu času tráví jako polyp přichycený ke dnu řek a rybníků.',
     textEn:'The world\u2019s only freshwater jellyfish — and it lives here too. Native to China, it reached Europe by accident, hidden among imported aquarium plants. It grows to just 2.5 cm and spends most of its life as a polyp attached to the bottom of rivers and ponds.',
-    photo:null },
+    photo:'images/zahavci/craspedacusta.jpg' },
   { name:'Talířovka středomořská', nameEn:'Mediterranean jellyfish', latin:'Cotylorhiza tuberculata',
     text:'Přezdívá se jí "smažené vejce" — žlutooranžový střed zvonu obklopený světlým prstencem. Ve svých tkáních hostí fotosyntetické řasy zooxanthellae, které jí dodávají energii výměnou za úkryt — stejný princip jako u korálů. Žahnutí je pro člověka prakticky nebolestivé.',
     textEn:'Nicknamed the "fried egg jellyfish" — a yellow-orange bell center ringed by a pale margin. It hosts photosynthetic zooxanthellae algae in its tissue, which supply energy in exchange for shelter — the same principle corals use. Its sting is practically painless to humans.',
-    photo:null },
+    photo:'images/zahavci/cotylorhiza.jpg' },
 ];
 
 const CARD_W=560, GAP=24, STEP=CARD_W+GAP;
