@@ -14,8 +14,6 @@
 
   <text x="580" y="52" font-family="DM Sans" font-size="28" font-weight="700" fill="#ffffff"
         text-anchor="middle" letter-spacing="3">ŽIVOTNÍ CYKLUS MEDÚZY</text>
-  <text x="580" y="78" font-family="DM Sans" font-size="14" fill="#00A0E3"
-        text-anchor="middle" letter-spacing="2" font-style="italic">Chrysaora plocamia</text>
 
   
   <path d="M 660.3,252.7 A 260,260 0 0,1 827.3,419.7" fill="none" stroke="#c87dd4" stroke-width="2.5" stroke-opacity="0.6" marker-end="url(#arr-chrysaora)"/>
@@ -38,9 +36,7 @@
              preserveAspectRatio="xMidYMid slice"/>
       <text x="580" y="95" font-family="DM Sans" font-size="18" font-weight="700"
             fill="#c87dd4" text-anchor="middle">Medúza</text>
-      <text x="580" y="115" font-family="DM Sans" font-size="13" font-style="italic"
-            fill="#c87dd4" fill-opacity="0.75" text-anchor="middle">Chrysaora plocamia</text>
-      <text x="580" y="135" font-family="DM Sans" font-size="13" font-weight="300" fill="rgba(255,255,255,0.65)" text-anchor="middle">Dospělý jedinec, rozmnožuje<tspan x="580" dy="17">se pohlavně</tspan></text>
+      <text x="580" y="120" font-family="DM Sans" font-size="13" font-weight="300" fill="rgba(255,255,255,0.65)" text-anchor="middle">Dospělý jedinec</text>
     </g>
     <g>
       <circle cx="840" cy="500" r="93" fill="#00A0E3" fill-opacity="0.12"/>
@@ -110,5 +106,14 @@
             fill="#e8d040" text-anchor="start">Strobilace</text>
       <text x="466" y="696" font-family="DM Sans" font-size="12" font-weight="300"
             fill="rgba(255,255,255,0.6)" text-anchor="start">polyp se dělí na ephyry</text>
+    </g>
+
+    <g>
+      <circle cx="764" cy="316" r="58" fill="#c87dd4" fill-opacity="0.10"/>
+      <circle cx="764" cy="316" r="58" fill="none" stroke="#c87dd4" stroke-width="1.5" stroke-dasharray="5 3" stroke-opacity="0.7"/>
+      <text x="834" y="308" font-family="DM Sans" font-size="16" font-weight="700"
+            fill="#c87dd4" text-anchor="start">Pohlavní rozmnožení</text>
+      <text x="834" y="328" font-family="DM Sans" font-size="12" font-weight="300"
+            fill="rgba(255,255,255,0.6)" text-anchor="start">medúza uvolňuje vajíčka a spermie</text>
     </g>
 </svg>
