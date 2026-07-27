@@ -138,7 +138,7 @@ const view={
 // odtržený rozjezdový vír žije v brázdě vlastním (reálným) časem
 const wake={active:false, y:0, sx:0, str:0, R:0, vy:0};
 let prevContracting=true;
-const WAKE_LIFE=8.0, WAKE_DRIFT=26;   // s ; px/s (×S) — pomalý rovnoměrný sesun
+const WAKE_LIFE=4.0, WAKE_DRIFT=40;   // s ; px/s (×S) — pomalý rovnoměrný sesun
 
 /* ═══ EASING ═══ */
 const easeOutCubic=t=>1-Math.pow(1-t,3);
@@ -149,7 +149,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 
 /* ═══ DOPŘEDNÝ POSUN (nahoru = vpřed) ═══
    narůstá při stahu (krok 2) a při rekuperaci (krok 5), na konci cyklu se vrátí */
-const TRAVEL={stroke:44, recap:40, coast:8}; // ← ladicí: záběr stahu / rekuperace / setrvačnost (×S)
+const TRAVEL={stroke:70, recap:40, coast:8}; // ← ladicí: záběr stahu / rekuperace / setrvačnost (×S)
 const smoothstep=t=>t*t*(3-2*t);
 function travelOffset(p){
   const cf=view.contractFrac;
