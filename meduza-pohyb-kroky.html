@@ -138,7 +138,7 @@ const view={
 // odtržený rozjezdový vír žije v brázdě vlastním (reálným) časem
 const wake={active:false, y:0, sx:0, str:0, R:0, vy:0};
 let prevContracting=true;
-const WAKE_LIFE=4.0, WAKE_DRIFT=40;   // s ; px/s (×S) — pomalý rovnoměrný sesun
+const WAKE_LIFE=8.0, WAKE_DRIFT=26;   // s ; px/s (×S) — pomalý rovnoměrný sesun
 
 /* ═══ EASING ═══ */
 const easeOutCubic=t=>1-Math.pow(1-t,3);
@@ -149,7 +149,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 
 /* ═══ DOPŘEDNÝ POSUN (nahoru = vpřed) ═══
    narůstá při stahu (krok 2) a při rekuperaci (krok 5), na konci cyklu se vrátí */
-const TRAVEL={stroke:70, recap:40, coast:8}; // ← ladicí: záběr stahu / rekuperace / setrvačnost (×S)
+const TRAVEL={stroke:44, recap:40, coast:8}; // ← ladicí: záběr stahu / rekuperace / setrvačnost (×S)
 const smoothstep=t=>t*t*(3-2*t);
 function travelOffset(p){
   const cf=view.contractFrac;
@@ -369,23 +369,31 @@ function drawAnnotations(K){
 }
 // rotující spirála = stáčející se vír; smysl vinutí + rotace dané znaménkem
 function spiral(cx,cy,R,sign,color){
-  const turns=1.0, N=54, rot=view.clock*2.1*sign;
-  ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=2.4*S; ctx.lineCap='round';
-  ctx.beginPath();
-  let ex=cx,ey=cy,eang=0;
-  for(let i=0;i<=N;i++){
-    const f=i/N, theta=sign*(f*turns*Math.PI*2)+rot, rr=R*f;
-    const x=cx+Math.cos(theta)*rr, y=cy+Math.sin(theta)*rr;
-    if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    ex=x;ey=y;eang=theta;
+  const rot=view.clock*2.1*sign;
+  const gap=1.15; // ← ladicí: velikost mezery v obloucích (radiány); menší = delší/uzavřenější oblouky
+  const end=rot+sign*(Math.PI*2-gap);
+  ctx.save(); ctx.lineCap='round';
+  const rings=[ // ← ladicí: poloměr (podíl z R), tloušťka, relativní krytí — vnější prstenec nejvýraznější
+    {r:R*1.00, w:2.6*S, a:1.00},
+    {r:R*0.62, w:2.2*S, a:0.65},
+    {r:R*0.32, w:1.8*S, a:0.38}
+  ];
+  for(const ring of rings){
+    ctx.strokeStyle=color; ctx.globalAlpha=ring.a; ctx.lineWidth=ring.w;
+    ctx.beginPath();
+    ctx.arc(cx,cy,ring.r,rot,end,sign<0);
+    ctx.stroke();
   }
-  ctx.stroke();
-  // hrot na vnějším konci ve směru rotace (tangenta)
-  const aang=Math.atan2(Math.cos(eang)*sign, -Math.sin(eang)*sign), ah=10*S;
+  ctx.globalAlpha=1;
+  // hrot na vedoucí hraně vnějšího oblouku, ve směru otáčení (tangenta)
+  const ex=cx+Math.cos(end)*R, ey=cy+Math.sin(end)*R;
+  const aang=Math.atan2(Math.cos(end)*sign, -Math.sin(end)*sign), ah=10*S;
+  ctx.strokeStyle=color; ctx.lineWidth=2.6*S;
   ctx.beginPath();
   ctx.moveTo(ex,ey); ctx.lineTo(ex-Math.cos(aang-0.5)*ah, ey-Math.sin(aang-0.5)*ah);
   ctx.moveTo(ex,ey); ctx.lineTo(ex-Math.cos(aang+0.5)*ah, ey-Math.sin(aang+0.5)*ah);
-  ctx.stroke(); ctx.restore();
+  ctx.stroke();
+  ctx.restore();
 }
 function tag(x,y,text,color,alpha){
   ctx.save(); ctx.globalAlpha=clamp(alpha,0,1);
