@@ -369,7 +369,7 @@ function drawAnnotations(K){
 }
 // rotující spirála = stáčející se vír; smysl vinutí + rotace dané znaménkem
 function spiral(cx,cy,R,sign,color){
-  const turns=1.0 N=54, rot=view.clock*2.1*sign;
+  const turns=1.0, N=54, rot=view.clock*2.1*sign;
   ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=2.4*S; ctx.lineCap='round';
   ctx.beginPath();
   let ex=cx,ey=cy,eang=0;
