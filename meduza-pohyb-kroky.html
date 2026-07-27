@@ -442,7 +442,8 @@ function frame(now){
   // pozadí + stopy částic
   if(view.parts){
     ctx.globalCompositeOperation='source-over';
-    ctx.fillStyle='rgba(0,26,46,0.20)'; ctx.fillRect(0,0,W,H);
+    const fadeAlpha = 1 - Math.pow(0.80, dt*60);
+    ctx.fillStyle='rgba(0,26,46,'+fadeAlpha+')'; ctx.fillRect(0,0,W,H);
     ctx.globalCompositeOperation='lighter';
     for(let i=0;i<NP;i++){
       const ix=i*4; let x=P[ix],y=P[ix+1];
