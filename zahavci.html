@@ -7,7 +7,6 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap');
 
-html { zoom: 0.7115; overflow: hidden; } /* 1366/1920 - Chromium-only kiosk */
 :root{
   --bg:#001a2e; --navy:#004469; --deeper:#00325a;
   --blue:#00A0E3; --orange:#EF7F1A; --white:#ffffff;
@@ -531,7 +530,7 @@ body{
 /* ═══════════════════════════════════════════════════════════
    SDÍLENÁ NAVIGACE MEZI KAPITOLAMI
    ═══════════════════════════════════════════════════════════ */
-let lang='cs';
+let lang=localStorage.getItem('t4-lang')||'cs';
 const chapters=[...document.querySelectorAll('.chapter')];
 let chIdx=0;
 
@@ -576,6 +575,7 @@ document.getElementById('chapterNextBtn').onclick=()=>showChapter(chIdx+1);
    ═══════════════════════════════════════════════════════════ */
 function setLang(l){
   lang=l;
+  localStorage.setItem('t4-lang', l);
   document.getElementById('csBtn').classList.toggle('active', l==='cs');
   document.getElementById('enBtn').classList.toggle('active', l==='en');
   document.querySelectorAll('[data-cs]').forEach(el=>{
@@ -831,6 +831,7 @@ window.addEventListener('resize',drawTreeLines);
    START + AUTO-RESET
    ═══════════════════════════════════════════════════════════ */
 showChapter(0);
+setLang(lang);
 
 (function(){
   var T=180*1000, t;

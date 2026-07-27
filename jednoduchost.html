@@ -7,7 +7,6 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap');
 
-html { zoom: 0.7115; overflow: hidden; } /* 1366/1920 - Chromium-only kiosk */  
 :root{
   --bg:#001a2e; --navy:#004469; --deeper:#00325a;
   --blue:#00A0E3; --orange:#EF7F1A; --white:#ffffff;
@@ -194,7 +193,7 @@ body{
     <div class="chapter" data-cs-title="Pohyb" data-en-title="Propulsion"
          data-cs-tag="Nejúspornější plavec v živočišné říši"
          data-en-tag="The most efficient swimmer in the animal kingdom">
-      <iframe id="animFrame" class="anim-frame" src="meduza-pohyb-kroky.html?embed=1"></iframe>
+      <iframe id="animFrame" class="anim-frame" src="meduza-pohyb-kroky.html?embed=1&v=2"></iframe>
     </div>
 
     <!-- ===== 3 · ŽAHAVÉ BUŇKY ===== -->
@@ -274,7 +273,7 @@ body{
 
 <script>
 /* ═══ STAV ═══ */
-let lang='cs', idx=0;
+let lang=localStorage.getItem('t4-lang')||'cs', idx=0;
 const chapters=[...document.querySelectorAll('.chapter')];
 const N=chapters.length;
 
@@ -295,6 +294,7 @@ function applyLang(){
 }
 function setLang(l){
   lang=l;
+  localStorage.setItem('t4-lang', l);
   document.getElementById('csBtn').classList.toggle('active',l==='cs');
   document.getElementById('enBtn').classList.toggle('active',l==='en');
   applyLang();
@@ -363,7 +363,7 @@ document.getElementById('nextBtn').onclick=()=>show(idx+1);
 
 /* ═══ START ═══ */
 document.getElementById('animFrame').addEventListener('load',updateAnim);
-show(0); applyLang();
+show(0); setLang(lang);
 
 /* ═══ AUTO-RESET (180 s nečinnosti) ═══ */
 (function(){

@@ -7,7 +7,6 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap');
 
-html { zoom: 0.7115; overflow: hidden; } /* 1366/1920 - Chromium-only kiosk */
 :root {
   --bg:     #001a2e;
   --bg2:    #004469;
@@ -326,6 +325,7 @@ body {
 
 <script>
 function setLang(l){
+  localStorage.setItem('t4-lang', l);
   document.getElementById('csBtn').classList.toggle('active', l==='cs');
   document.getElementById('enBtn').classList.toggle('active', l==='en');
   document.querySelectorAll('[data-cs]').forEach(el=>{
@@ -334,6 +334,7 @@ function setLang(l){
 }
 document.getElementById('csBtn').onclick=()=>setLang('cs');
 document.getElementById('enBtn').onclick=()=>setLang('en');
+if(localStorage.getItem('t4-lang')==='en') setLang('en');
 
 (function(){
   var T=180*1000, t;
