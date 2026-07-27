@@ -149,7 +149,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 
 /* ═══ DOPŘEDNÝ POSUN (nahoru = vpřed) ═══
    narůstá při stahu (krok 2) a při rekuperaci (krok 5), na konci cyklu se vrátí */
-const TRAVEL={stroke:44, recap:40, coast:8}; // ← ladicí: záběr stahu / rekuperace / setrvačnost (×S)
+const TRAVEL={stroke:70, recap:40, coast:8}; // ← ladicí: záběr stahu / rekuperace / setrvačnost (×S)
 const smoothstep=t=>t*t*(3-2*t);
 function travelOffset(p){
   const cf=view.contractFrac;
